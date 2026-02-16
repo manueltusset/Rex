@@ -73,16 +73,18 @@ pub fn open_terminal_with_resume(
     #[cfg(target_os = "windows")]
     {
         if use_wsl {
+            let distro = crate::services::wsl::default_distro()
+                .unwrap_or_else(|| "Ubuntu".to_string());
             let wsl_cmd = format!(
                 "cd '{}' && claude --resume {}",
                 project_path, session_id
             );
             Command::new("wt.exe")
-                .args(["-p", "Ubuntu", "--", "bash", "-c", &wsl_cmd])
+                .args(["-p", &distro, "--", "bash", "-c", &wsl_cmd])
                 .spawn()
                 .or_else(|_| {
                     Command::new("wsl.exe")
-                        .args(["bash", "-c", &wsl_cmd])
+                        .args(["-d", &distro, "bash", "-c", &wsl_cmd])
                         .spawn()
                 })
                 .map_err(|e| format!("Failed to open WSL terminal: {}", e))?;

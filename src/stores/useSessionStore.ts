@@ -18,12 +18,12 @@ export const useSessionStore = create<SessionState>((set) => ({
   error: null,
 
   fetch: async () => {
-    const { claudeDir, isConnected } = useConnectionStore.getState();
+    const { claudeDir, useWsl, isConnected } = useConnectionStore.getState();
     if (!isConnected || !claudeDir) return;
 
     set({ isLoading: true, error: null });
     try {
-      const sessions = await listSessions(claudeDir);
+      const sessions = await listSessions(claudeDir, useWsl);
       set({ sessions, isLoading: false });
     } catch (e) {
       set({

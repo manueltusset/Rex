@@ -24,4 +24,8 @@ pub struct PlatformInfo {
     pub os: String,
     pub is_wsl_available: bool,
     pub default_claude_dir: String,
+    #[serde(default)]
+    pub wsl_distro: Option<String>,
+    #[serde(default)]
+    pub wsl_claude_dir: Option<String>,
 }

@@ -8,14 +8,16 @@ export async function fetchUsage(token: string): Promise<UsageResponse> {
 
 export async function listSessions(
   claudeDir: string,
+  useWsl?: boolean,
 ): Promise<SessionMeta[]> {
-  return invoke<SessionMeta[]>("list_sessions", { claudeDir });
+  return invoke<SessionMeta[]>("list_sessions", { claudeDir, useWsl });
 }
 
 export async function readSession(
   sessionPath: string,
+  useWsl?: boolean,
 ): Promise<SessionEntry[]> {
-  return invoke<SessionEntry[]>("read_session", { sessionPath });
+  return invoke<SessionEntry[]>("read_session", { sessionPath, useWsl });
 }
 
 export async function resumeSession(

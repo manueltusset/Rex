@@ -11,16 +11,26 @@ interface DirectoryPickerProps {
 }
 
 export function DirectoryPicker({ onComplete }: DirectoryPickerProps) {
-  const { isWindows, isWslAvailable, defaultClaudeDir } = usePlatform();
+  const { isWindows, isWslAvailable, defaultClaudeDir, wslClaudeDir, wslDistro } = usePlatform();
   const { setClaudeDir, setUseWsl } = useConnectionStore();
   const [dir, setDir] = useState("");
   const [wsl, setWsl] = useState(false);
 
+  // Path default inicial
   useEffect(() => {
     if (defaultClaudeDir) {
       setDir(defaultClaudeDir);
     }
   }, [defaultClaudeDir]);
+
+  // Troca path ao alternar WSL toggle
+  useEffect(() => {
+    if (wsl && wslClaudeDir) {
+      setDir(wslClaudeDir);
+    } else if (defaultClaudeDir) {
+      setDir(defaultClaudeDir);
+    }
+  }, [wsl]);
 
   const handleBrowse = async () => {
     const selected = await open({
@@ -63,26 +73,42 @@ export function DirectoryPicker({ onComplete }: DirectoryPickerProps) {
         <label className="block text-sm font-medium text-foreground-secondary">
           Directory Path
         </label>
-        <button
-          type="button"
-          onClick={handleBrowse}
-          className="w-full flex items-center gap-3 px-4 py-3 bg-surface border border-border rounded-lg hover:border-primary/40 hover:bg-ring-bg/80 transition-colors text-left cursor-pointer group"
-        >
-          <Icon
-            name="folder_open"
-            className="text-muted group-hover:text-primary-light transition-colors"
-          />
-          <span
-            className={`flex-1 truncate text-sm font-mono ${dir ? "text-foreground" : "text-muted-subtle"}`}
+
+        {wsl ? (
+          // WSL: input de texto editavel (dialog nativo nao funciona com paths Linux)
+          <div className="flex items-center gap-2">
+            <Icon name="terminal" className="text-muted shrink-0" />
+            <input
+              type="text"
+              value={dir}
+              onChange={(e) => setDir(e.target.value)}
+              placeholder="/home/user/.claude"
+              className="w-full px-4 py-3 bg-surface border border-border rounded-lg text-sm font-mono text-foreground placeholder:text-muted-subtle focus:border-primary/40 focus:outline-none transition-colors"
+            />
+          </div>
+        ) : (
+          // Nativo: browse button com dialog
+          <button
+            type="button"
+            onClick={handleBrowse}
+            className="w-full flex items-center gap-3 px-4 py-3 bg-surface border border-border rounded-lg hover:border-primary/40 hover:bg-ring-bg/80 transition-colors text-left cursor-pointer group"
           >
-            {dir || "Click to select directory..."}
-          </span>
-          <Icon
-            name="chevron_right"
-            size="sm"
-            className="text-muted-subtle group-hover:text-foreground-secondary transition-colors"
-          />
-        </button>
+            <Icon
+              name="folder_open"
+              className="text-muted group-hover:text-primary-light transition-colors"
+            />
+            <span
+              className={`flex-1 truncate text-sm font-mono ${dir ? "text-foreground" : "text-muted-subtle"}`}
+            >
+              {dir || "Click to select directory..."}
+            </span>
+            <Icon
+              name="chevron_right"
+              size="sm"
+              className="text-muted-subtle group-hover:text-foreground-secondary transition-colors"
+            />
+          </button>
+        )}
       </div>
 
       {isWindows && isWslAvailable && (
@@ -98,8 +124,9 @@ export function DirectoryPicker({ onComplete }: DirectoryPickerProps) {
         <div className="flex items-start gap-3 p-3 bg-surface rounded-lg border border-border">
           <Icon name="info" className="text-primary-light mt-0.5" />
           <p className="text-xs text-muted leading-relaxed">
-            In WSL mode, the path should be a Linux path (e.g.,
-            /home/user/.claude). Resume will open sessions in a WSL terminal.
+            WSL mode active{wslDistro ? ` (${wslDistro})` : ""}. Use a Linux
+            path (e.g., /home/user/.claude). Sessions will open in a WSL
+            terminal.
           </p>
         </div>
       )}
