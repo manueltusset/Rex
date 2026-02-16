@@ -10,5 +10,8 @@ export function usePlatform() {
     isLinux: isLinux(),
     isWslAvailable: platform.is_wsl_available,
     defaultClaudeDir: platform.default_claude_dir,
+    wslDistros: platform.wsl_distros,
+    wslDistro: platform.wsl_distro,
+    wslClaudeDir: platform.wsl_claude_dir,
   };
 }

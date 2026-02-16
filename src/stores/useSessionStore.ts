@@ -18,12 +18,12 @@ export const useSessionStore = create<SessionState>((set) => ({
   error: null,
 
   fetch: async () => {
-    const { claudeDir, isConnected } = useConnectionStore.getState();
+    const { claudeDir, useWsl, wslDistro, isConnected } = useConnectionStore.getState();
     if (!isConnected || !claudeDir) return;
 
     set({ isLoading: true, error: null });
     try {
-      const sessions = await listSessions(claudeDir);
+      const sessions = await listSessions(claudeDir, useWsl, wslDistro || undefined);
       set({ sessions, isLoading: false });
     } catch (e) {
       set({
@@ -34,7 +34,8 @@ export const useSessionStore = create<SessionState>((set) => ({
   },
 
   resume: async (sessionId: string, projectPath: string) => {
-    const { useWsl } = useConnectionStore.getState();
-    await resumeSession(sessionId, projectPath, useWsl);
+    const { useWsl, wslDistro } = useConnectionStore.getState();
+    console.log("[Rex] resume:", { sessionId, projectPath, useWsl, wslDistro });
+    await resumeSession(sessionId, projectPath, useWsl, wslDistro || undefined);
   },
 }));

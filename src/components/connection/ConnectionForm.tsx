@@ -4,29 +4,44 @@ import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
 import { Spinner } from "@/components/ui/Spinner";
 import { useConnectionStore } from "@/stores/useConnectionStore";
+import { usePlatform } from "@/hooks/usePlatform";
 
 interface ConnectionFormProps {
   onSuccess: () => void;
 }
 
+function getCredentialHint(isMac: boolean, isLinux: boolean, isWindows: boolean, isWslAvailable: boolean): string {
+  if (isMac) {
+    return 'Run: security find-generic-password -s "Claude Code-credentials" -w';
+  }
+  if (isLinux) {
+    return "Extract accessToken from ~/.claude/.credentials.json";
+  }
+  if (isWindows && isWslAvailable) {
+    return "If Claude is in WSL, run in WSL: cat ~/.claude/.credentials.json and extract accessToken";
+  }
+  return "Extract accessToken from %USERPROFILE%\\.claude\\.credentials.json";
+}
+
 export function ConnectionForm({ onSuccess }: ConnectionFormProps) {
   const { connect, autoConnect, isLoading, error } = useConnectionStore();
+  const { isMac, isLinux, isWindows, isWslAvailable } = usePlatform();
   const [token, setToken] = useState("");
   const [showToken, setShowToken] = useState(false);
   const [autoDetecting, setAutoDetecting] = useState(true);
-  const [autoFailed, setAutoFailed] = useState(false);
+  const [autoResult, setAutoResult] = useState<"not_found" | "expired" | null>(null);
 
   // Tenta auto-detectar o token ao montar
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const success = await autoConnect();
+      const result = await autoConnect();
       if (cancelled) return;
-      if (success) {
+      if (result === "success") {
         onSuccess();
       } else {
         setAutoDetecting(false);
-        setAutoFailed(true);
+        setAutoResult(result);
       }
     })();
     return () => {
@@ -58,19 +73,27 @@ export function ConnectionForm({ onSuccess }: ConnectionFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {autoFailed && (
+      {autoResult === "expired" && (
+        <div className="flex items-start gap-3 p-3 bg-danger/10 rounded-lg border border-danger/20">
+          <Icon name="error" className="text-danger mt-0.5" />
+          <p className="text-xs text-foreground-secondary leading-relaxed">
+            Token found but expired. Run{" "}
+            <span className="text-foreground font-mono text-[11px]">
+              claude
+            </span>{" "}
+            in your terminal to re-authenticate, then reopen Rex.
+          </p>
+        </div>
+      )}
+
+      {autoResult === "not_found" && (
         <div className="flex items-start gap-3 p-3 bg-warning/10 rounded-lg border border-warning/20">
           <Icon name="info" className="text-warning mt-0.5" />
           <p className="text-xs text-foreground-secondary leading-relaxed">
-            Could not auto-detect credentials. Paste your OAuth token from{" "}
-            <span className="text-foreground font-medium">
-              ~/.claude/.credentials.json
-            </span>{" "}
-            or run{" "}
+            Could not auto-detect credentials.{" "}
             <span className="text-foreground font-mono text-[11px]">
-              security find-generic-password -s "Claude Code-credentials" -w
-            </span>{" "}
-            in Terminal.
+              {getCredentialHint(isMac, isLinux, isWindows, isWslAvailable)}
+            </span>
           </p>
         </div>
       )}
@@ -81,7 +104,7 @@ export function ConnectionForm({ onSuccess }: ConnectionFormProps) {
         value={token}
         onChange={(e) => setToken(e.target.value)}
         icon={<Icon name="key" />}
-        helpText='accessToken from ~/.claude/.credentials.json (starts with "sk-ant-")'
+        helpText='OAuth token from Claude Code CLI (starts with "sk-ant-"). Not a browser session key.'
         error={error ?? undefined}
         endAdornment={
           <button

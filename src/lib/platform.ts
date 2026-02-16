@@ -5,6 +5,9 @@ let cachedPlatform: PlatformInfo = {
   os: "unknown",
   is_wsl_available: false,
   default_claude_dir: "~/.claude",
+  wsl_distros: [],
+  wsl_distro: null,
+  wsl_claude_dir: null,
 };
 
 export async function initPlatform(): Promise<void> {

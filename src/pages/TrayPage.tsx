@@ -72,27 +72,42 @@ export function TrayPage() {
 
   useTheme();
 
+  // Carrega cache do store compartilhado
+  const loadCache = async () => {
+    try {
+      const cache = await getValue<UsageCache>("usageCache");
+      if (cache) {
+        useUsageStore.setState({
+          fiveHour: cache.fiveHour,
+          sevenDay: cache.sevenDay,
+          sonnetWeekly: cache.sonnetWeekly ?? null,
+          lastFetched: cache.cachedAt,
+        });
+      }
+    } catch {
+      // Cache nao disponivel
+    }
+  };
+
+  // Init: carrega store, cache e faz fetch
   useEffect(() => {
     Promise.all([loadFromStore(), loadSettings()]).then(async () => {
-      // Carregar cache de uso da janela principal
-      try {
-        const cache = await getValue<UsageCache>("usageCache");
-        if (cache) {
-          useUsageStore.setState({
-            fiveHour: cache.fiveHour,
-            sevenDay: cache.sevenDay,
-            sonnetWeekly: cache.sonnetWeekly ?? null,
-            lastFetched: cache.cachedAt,
-          });
-        }
-      } catch {
-        // Cache nao disponivel
-      }
-
+      await loadCache();
       setReady(true);
       fetch();
     });
   }, []);
+
+  // Refresh ao reabrir popup (show/hide reutiliza a mesma janela)
+  useEffect(() => {
+    const unlisten = appWindow.onFocusChanged(({ payload: focused }) => {
+      if (focused) {
+        loadCache();
+        fetch();
+      }
+    });
+    return () => { unlisten.then((fn) => fn()); };
+  }, [fetch]);
 
   const handleOpenDashboard = async () => {
     const { WebviewWindow } = await import("@tauri-apps/api/webviewWindow");
