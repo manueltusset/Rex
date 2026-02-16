@@ -12,10 +12,10 @@ import { ROUTES, APP_VERSION } from "@/utils/constants";
 
 export function SettingsPage() {
   const navigate = useNavigate();
-  const { claudeDir, useWsl, orgId, setClaudeDir, setUseWsl, disconnect } =
+  const { claudeDir, useWsl, wslDistro, orgId, setClaudeDir, setUseWsl, setWslDistro, disconnect } =
     useConnectionStore();
   const { refreshInterval, setRefreshInterval, notificationsEnabled, setNotificationsEnabled, theme, setTheme } = useSettingsStore();
-  const { isWindows, isWslAvailable } = usePlatform();
+  const { isWindows, isWslAvailable, wslDistros } = usePlatform();
 
   const [dirInput, setDirInput] = useState(claudeDir);
   const [saved, setSaved] = useState(false);
@@ -92,13 +92,29 @@ export function SettingsPage() {
             icon={<Icon name="folder" />}
           />
           {isWindows && isWslAvailable && (
-            <div className="mt-4">
+            <div className="mt-4 space-y-4">
               <Toggle
                 checked={useWsl}
                 onChange={(val) => setUseWsl(val)}
                 label="WSL Mode"
                 description="Read sessions and resume via WSL"
               />
+              {useWsl && wslDistros.length > 0 && (
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-foreground-secondary">
+                    WSL Distribution
+                  </label>
+                  <select
+                    value={wslDistro}
+                    onChange={(e) => setWslDistro(e.target.value)}
+                    className="w-full px-4 py-3 bg-surface border border-border rounded-lg text-sm font-mono text-foreground focus:border-primary/40 focus:outline-none transition-colors cursor-pointer"
+                  >
+                    {wslDistros.map((d) => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
           )}
           <Button variant="secondary" onClick={handleSaveDir} className="mt-4">

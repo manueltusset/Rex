@@ -9,33 +9,36 @@ export async function fetchUsage(token: string): Promise<UsageResponse> {
 export async function listSessions(
   claudeDir: string,
   useWsl?: boolean,
+  wslDistro?: string,
 ): Promise<SessionMeta[]> {
-  return invoke<SessionMeta[]>("list_sessions", { claudeDir, useWsl });
+  return invoke<SessionMeta[]>("list_sessions", { claudeDir, useWsl, wslDistro });
 }
 
 export async function readSession(
   sessionPath: string,
   useWsl?: boolean,
+  wslDistro?: string,
 ): Promise<SessionEntry[]> {
-  return invoke<SessionEntry[]>("read_session", { sessionPath, useWsl });
+  return invoke<SessionEntry[]>("read_session", { sessionPath, useWsl, wslDistro });
 }
 
 export async function resumeSession(
   sessionId: string,
   projectPath: string,
   useWsl: boolean,
+  wslDistro?: string,
 ): Promise<void> {
-  return invoke<void>("resume_session", { sessionId, projectPath, useWsl });
+  return invoke<void>("resume_session", { sessionId, projectPath, useWsl, wslDistro });
 }
 
 export async function getPlatformInfo(): Promise<PlatformInfo> {
   return invoke<PlatformInfo>("get_platform_info");
 }
 
-export async function detectOAuthToken(): Promise<string> {
-  return invoke<string>("detect_oauth_token");
+export async function detectOAuthToken(wslDistro?: string): Promise<string> {
+  return invoke<string>("detect_oauth_token", { wslDistro });
 }
 
-export async function cliRefreshToken(useWsl?: boolean): Promise<string> {
-  return invoke<string>("cli_refresh_token", { useWsl });
+export async function cliRefreshToken(useWsl?: boolean, wslDistro?: string): Promise<string> {
+  return invoke<string>("cli_refresh_token", { useWsl, wslDistro });
 }

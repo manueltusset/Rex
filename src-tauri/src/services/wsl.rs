@@ -15,24 +15,30 @@ fn decode_wsl_output(bytes: &[u8]) -> String {
     String::from_utf8_lossy(bytes).replace('\u{0}', "")
 }
 
-/// Detecta a distro WSL padrao
+/// Lista todas as distros WSL instaladas
 #[cfg(target_os = "windows")]
-pub fn default_distro() -> Option<String> {
-    let output = std::process::Command::new("wsl.exe")
+pub fn list_distros() -> Vec<String> {
+    let output = match std::process::Command::new("wsl.exe")
         .args(["--list", "--quiet"])
         .output()
-        .ok()?;
-
-    if !output.status.success() {
-        return None;
-    }
+    {
+        Ok(o) if o.status.success() => o,
+        _ => return vec![],
+    };
 
     let text = decode_wsl_output(&output.stdout);
 
     text.lines()
         .map(|l| l.trim())
-        .find(|l| !l.is_empty())
+        .filter(|l| !l.is_empty())
         .map(|s| s.to_string())
+        .collect()
+}
+
+/// Detecta a distro WSL padrao (primeira da lista)
+#[cfg(target_os = "windows")]
+pub fn default_distro() -> Option<String> {
+    list_distros().into_iter().next()
 }
 
 /// Converte path Linux para UNC Windows acessivel via WSL

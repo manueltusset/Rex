@@ -11,10 +11,11 @@ interface DirectoryPickerProps {
 }
 
 export function DirectoryPicker({ onComplete }: DirectoryPickerProps) {
-  const { isWindows, isWslAvailable, defaultClaudeDir, wslClaudeDir, wslDistro } = usePlatform();
-  const { setClaudeDir, setUseWsl } = useConnectionStore();
+  const { isWindows, isWslAvailable, defaultClaudeDir, wslDistros, wslClaudeDir } = usePlatform();
+  const { setClaudeDir, setUseWsl, setWslDistro } = useConnectionStore();
   const [dir, setDir] = useState("");
   const [wsl, setWsl] = useState(false);
+  const [distro, setDistro] = useState(wslDistros[0] ?? "");
 
   // Path default inicial
   useEffect(() => {
@@ -49,6 +50,9 @@ export function DirectoryPicker({ onComplete }: DirectoryPickerProps) {
     await setClaudeDir(dir.trim());
     if (isWindows) {
       await setUseWsl(wsl);
+      if (wsl && distro) {
+        await setWslDistro(distro);
+      }
     }
     onComplete();
   };
@@ -75,7 +79,7 @@ export function DirectoryPicker({ onComplete }: DirectoryPickerProps) {
         </label>
 
         {wsl ? (
-          // WSL: input de texto editavel (dialog nativo nao funciona com paths Linux)
+          // WSL: input de texto editavel
           <div className="flex items-center gap-2">
             <Icon name="terminal" className="text-muted shrink-0" />
             <input
@@ -120,11 +124,29 @@ export function DirectoryPicker({ onComplete }: DirectoryPickerProps) {
         />
       )}
 
+      {/* Seletor de distro WSL */}
+      {isWindows && wsl && wslDistros.length > 0 && (
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-foreground-secondary">
+            WSL Distribution
+          </label>
+          <select
+            value={distro}
+            onChange={(e) => setDistro(e.target.value)}
+            className="w-full px-4 py-3 bg-surface border border-border rounded-lg text-sm font-mono text-foreground focus:border-primary/40 focus:outline-none transition-colors cursor-pointer"
+          >
+            {wslDistros.map((d) => (
+              <option key={d} value={d}>{d}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
       {isWindows && wsl && (
         <div className="flex items-start gap-3 p-3 bg-surface rounded-lg border border-border">
           <Icon name="info" className="text-primary-light mt-0.5" />
           <p className="text-xs text-muted leading-relaxed">
-            WSL mode active{wslDistro ? ` (${wslDistro})` : ""}. Use a Linux
+            WSL mode active{distro ? ` (${distro})` : ""}. Use a Linux
             path (e.g., /home/user/.claude). Sessions will open in a WSL
             terminal.
           </p>

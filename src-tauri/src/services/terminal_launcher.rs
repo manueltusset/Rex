@@ -4,13 +4,12 @@ pub fn open_terminal_with_resume(
     session_id: &str,
     project_path: &str,
     use_wsl: bool,
+    wsl_distro: Option<&str>,
 ) -> Result<(), String> {
     #[cfg(target_os = "macos")]
     {
-        let _ = use_wsl;
+        let _ = (use_wsl, wsl_distro);
         let resume_cmd = format!("cd '{}' && claude --resume {}", project_path, session_id);
-        // Cria um .command temporario que o macOS abre no Terminal.app
-        // Nao requer permissao de Automacao
         let script_path = std::env::temp_dir().join("rex-resume.command");
         let script_content = format!(
             "#!/bin/bash\nclear\n{}\nexit\n",
@@ -35,7 +34,7 @@ pub fn open_terminal_with_resume(
 
     #[cfg(target_os = "linux")]
     {
-        let _ = use_wsl;
+        let _ = (use_wsl, wsl_distro);
         let resume_cmd = format!("cd '{}' && claude --resume {}", project_path, session_id);
         let terminals = [
             ("x-terminal-emulator", vec!["-e", "bash", "-c"]),
@@ -73,18 +72,20 @@ pub fn open_terminal_with_resume(
     #[cfg(target_os = "windows")]
     {
         if use_wsl {
-            let distro = crate::services::wsl::default_distro()
+            // Usa a distro escolhida pelo usuario, ou detecta automaticamente
+            let distro = wsl_distro
+                .map(|s| s.to_string())
+                .or_else(|| crate::services::wsl::default_distro())
                 .unwrap_or_else(|| "Ubuntu".to_string());
+
             let wsl_cmd = format!(
                 "cd '{}' && claude --resume {}",
                 project_path, session_id
             );
-            // Abre WSL direto no Windows Terminal (sem depender de nome de perfil)
             Command::new("wt.exe")
                 .args(["wsl.exe", "-d", &distro, "--", "bash", "-c", &wsl_cmd])
                 .spawn()
                 .or_else(|_| {
-                    // Fallback sem Windows Terminal
                     Command::new("wsl.exe")
                         .args(["-d", &distro, "--", "bash", "-c", &wsl_cmd])
                         .spawn()

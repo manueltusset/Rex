@@ -17,6 +17,7 @@ export interface PlatformInfo {
   os: string;
   is_wsl_available: boolean;
   default_claude_dir: string;
+  wsl_distros: string[];
   wsl_distro: string | null;
   wsl_claude_dir: string | null;
 }

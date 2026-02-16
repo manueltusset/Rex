@@ -7,6 +7,7 @@ interface ConnectionState {
   token: string;
   claudeDir: string;
   useWsl: boolean;
+  wslDistro: string;
   isConnected: boolean;
   isLoading: boolean;
   isHydrated: boolean;
@@ -18,6 +19,7 @@ interface ConnectionState {
   refreshToken: () => Promise<boolean>;
   setClaudeDir: (dir: string) => Promise<void>;
   setUseWsl: (val: boolean) => Promise<void>;
+  setWslDistro: (distro: string) => Promise<void>;
   loadFromStore: () => Promise<void>;
 }
 
@@ -26,6 +28,7 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
   token: "",
   claudeDir: "",
   useWsl: false,
+  wslDistro: "",
   isConnected: false,
   isLoading: false,
   isHydrated: false,
@@ -50,9 +53,12 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
   autoConnect: async () => {
     set({ isLoading: true, error: null });
 
+    const { useWsl, wslDistro } = get();
+    const distro = wslDistro || undefined;
+
     let token: string;
     try {
-      token = await detectOAuthToken();
+      token = await detectOAuthToken(distro);
     } catch {
       set({ isLoading: false });
       return "not_found";
@@ -66,8 +72,7 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
     } catch {
       // Token expirado - tenta refresh via Claude CLI
       try {
-        const { useWsl } = get();
-        const refreshed = await cliRefreshToken(useWsl);
+        const refreshed = await cliRefreshToken(useWsl, distro);
         await fetchUsage(refreshed);
         set({ token: refreshed, isConnected: true, isLoading: false });
         await setValue("token", refreshed);
@@ -86,18 +91,23 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
       isConnected: false,
       claudeDir: "",
       useWsl: false,
+      wslDistro: "",
     });
     await deleteValue("orgId");
     await deleteValue("token");
     await deleteValue("claudeDir");
     await deleteValue("useWsl");
+    await deleteValue("wslDistro");
   },
 
   // Re-detecta token ou invoca CLI para renovar
   refreshToken: async () => {
     try {
+      const { useWsl, wslDistro } = get();
+      const distro = wslDistro || undefined;
+
       // Tenta re-ler (CLI pode ter renovado em outro terminal)
-      const newToken = await detectOAuthToken();
+      const newToken = await detectOAuthToken(distro);
       const currentToken = get().token;
 
       if (newToken && newToken !== currentToken) {
@@ -108,8 +118,7 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
       }
 
       // Mesmo token - tenta refresh via CLI
-      const { useWsl } = get();
-      const refreshed = await cliRefreshToken(useWsl);
+      const refreshed = await cliRefreshToken(useWsl, distro);
       if (refreshed && refreshed !== currentToken) {
         await fetchUsage(refreshed);
         set({ token: refreshed, error: null });
@@ -133,14 +142,20 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
     await setValue("useWsl", val);
   },
 
+  setWslDistro: async (distro: string) => {
+    set({ wslDistro: distro });
+    await setValue("wslDistro", distro);
+  },
+
   loadFromStore: async () => {
     try {
       const orgId = (await getValue<string>("orgId")) ?? "";
       const token = (await getValue<string>("token")) ?? "";
       const claudeDir = (await getValue<string>("claudeDir")) ?? "";
       const useWsl = (await getValue<boolean>("useWsl")) ?? false;
+      const wslDistro = (await getValue<string>("wslDistro")) ?? "";
       const isConnected = !!token;
-      set({ orgId, token, claudeDir, useWsl, isConnected, isHydrated: true });
+      set({ orgId, token, claudeDir, useWsl, wslDistro, isConnected, isHydrated: true });
     } catch {
       set({ isHydrated: true });
     }

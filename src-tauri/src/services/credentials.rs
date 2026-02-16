@@ -14,11 +14,14 @@ struct OAuthData {
 }
 
 /// Invoca o Claude CLI para acionar o refresh interno do token
-pub async fn try_cli_refresh(use_wsl: bool) -> Result<String, String> {
+pub async fn try_cli_refresh(use_wsl: bool, wsl_distro: Option<&str>) -> Result<String, String> {
     let result = if cfg!(target_os = "windows") && use_wsl {
         // Windows + WSL: claude esta dentro do WSL
-        tokio::process::Command::new("wsl.exe")
-            .args(["--", "claude", "auth", "status"])
+        let mut cmd = tokio::process::Command::new("wsl.exe");
+        if let Some(d) = wsl_distro {
+            cmd.args(["-d", d]);
+        }
+        cmd.args(["--", "claude", "auth", "status"])
             .stdout(std::process::Stdio::piped())
             .stderr(std::process::Stdio::piped())
             .output()
@@ -38,11 +41,11 @@ pub async fn try_cli_refresh(use_wsl: bool) -> Result<String, String> {
     }
 
     // Re-le credenciais (CLI pode ter renovado o token)
-    detect_oauth_token().await
+    detect_oauth_token(wsl_distro).await
 }
 
 /// Tenta detectar o OAuth token automaticamente
-pub async fn detect_oauth_token() -> Result<String, String> {
+pub async fn detect_oauth_token(wsl_distro: Option<&str>) -> Result<String, String> {
     // 1. Variavel de ambiente
     if let Ok(token) = std::env::var("CLAUDE_CODE_OAUTH_TOKEN") {
         if !token.is_empty() {
@@ -69,9 +72,13 @@ pub async fn detect_oauth_token() -> Result<String, String> {
 
     // 5. Credenciais dentro do WSL (Windows only)
     #[cfg(target_os = "windows")]
-    if let Some(token) = read_wsl_credentials().await {
+    if let Some(token) = read_wsl_credentials(wsl_distro).await {
         return Ok(token);
     }
+
+    // Suprime warning em plataformas nao-Windows
+    #[cfg(not(target_os = "windows"))]
+    let _ = wsl_distro;
 
     Err("Could not detect OAuth token. Check if Claude Code CLI is authenticated.".to_string())
 }
@@ -84,8 +91,12 @@ async fn read_credentials_file() -> Option<String> {
 
 /// Le credenciais de dentro do WSL via UNC path
 #[cfg(target_os = "windows")]
-async fn read_wsl_credentials() -> Option<String> {
-    let distro = super::wsl::default_distro()?;
+async fn read_wsl_credentials(wsl_distro: Option<&str>) -> Option<String> {
+    // Usa distro selecionada pelo usuario, senao detecta automaticamente
+    let distro = wsl_distro
+        .map(|s| s.to_string())
+        .filter(|s| !s.is_empty())
+        .or_else(|| super::wsl::default_distro())?;
     let wsl_home = super::wsl::wsl_home(&distro)?;
     let linux_path = format!("{}/.claude/.credentials.json", wsl_home);
     let unc = super::wsl::linux_to_unc(&linux_path, &distro);
