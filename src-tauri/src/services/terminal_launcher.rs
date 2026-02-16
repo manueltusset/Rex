@@ -71,6 +71,10 @@ pub fn open_terminal_with_resume(
 
     #[cfg(target_os = "windows")]
     {
+        use std::os::windows::process::CommandExt;
+        const DETACHED_PROCESS: u32 = 0x00000008;
+        const CREATE_NEW_CONSOLE: u32 = 0x00000010;
+
         eprintln!(
             "[Rex] resume: use_wsl={}, wsl_distro={:?}, session={}, path={}",
             use_wsl, wsl_distro, session_id, project_path
@@ -97,25 +101,43 @@ pub fn open_terminal_with_resume(
 
             let script = script_path.to_str().unwrap_or("rex-resume.bat").to_string();
 
-            // Tenta Windows Terminal, fallback para cmd
+            // -w new: nova janela (nao reutiliza a do dev server)
+            // DETACHED_PROCESS: desvincula do console pai
             Command::new("wt.exe")
-                .args(["new-tab", "--title", "Rex - Resume", "--", "cmd.exe", "/c", &script])
+                .args(["-w", "new", "--title", "Rex - Resume", "--", "cmd.exe", "/c", &script])
+                .creation_flags(DETACHED_PROCESS)
                 .spawn()
                 .or_else(|_| {
                     eprintln!("[Rex] wt.exe failed, trying cmd.exe fallback");
+                    // CREATE_NEW_CONSOLE: abre em janela propria
                     Command::new("cmd.exe")
-                        .args(["/c", "start", "Rex", &script])
+                        .args(["/c", &script])
+                        .creation_flags(CREATE_NEW_CONSOLE)
                         .spawn()
                 })
                 .map_err(|e| format!("Failed to open WSL terminal: {}", e))?;
         } else {
-            let win_cmd = format!(
-                "cd /d \"{}\" && claude --resume {}",
+            let script_path = std::env::temp_dir().join("rex-resume.bat");
+            let script_content = format!(
+                "@echo off\r\ncd /d \"{}\"\r\nclaude --resume {}\r\n",
                 project_path, session_id
             );
-            Command::new("cmd")
-                .args(["/c", "start", "cmd", "/k", &win_cmd])
+
+            std::fs::write(&script_path, &script_content)
+                .map_err(|e| format!("Failed to write script: {}", e))?;
+
+            let script = script_path.to_str().unwrap_or("rex-resume.bat").to_string();
+
+            Command::new("wt.exe")
+                .args(["-w", "new", "--title", "Rex - Resume", "--", "cmd.exe", "/c", &script])
+                .creation_flags(DETACHED_PROCESS)
                 .spawn()
+                .or_else(|_| {
+                    Command::new("cmd.exe")
+                        .args(["/c", &script])
+                        .creation_flags(CREATE_NEW_CONSOLE)
+                        .spawn()
+                })
                 .map_err(|e| format!("Failed to open terminal: {}", e))?;
         }
     }
