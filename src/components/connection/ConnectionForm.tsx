@@ -10,19 +10,22 @@ interface ConnectionFormProps {
   onSuccess: () => void;
 }
 
-function getCredentialHint(isMac: boolean, isLinux: boolean): string {
+function getCredentialHint(isMac: boolean, isLinux: boolean, isWindows: boolean, isWslAvailable: boolean): string {
   if (isMac) {
     return 'Run: security find-generic-password -s "Claude Code-credentials" -w';
   }
   if (isLinux) {
     return "Extract accessToken from ~/.claude/.credentials.json";
   }
+  if (isWindows && isWslAvailable) {
+    return "If Claude is in WSL, run in WSL: cat ~/.claude/.credentials.json and extract accessToken";
+  }
   return "Extract accessToken from %USERPROFILE%\\.claude\\.credentials.json";
 }
 
 export function ConnectionForm({ onSuccess }: ConnectionFormProps) {
   const { connect, autoConnect, isLoading, error } = useConnectionStore();
-  const { isMac, isLinux } = usePlatform();
+  const { isMac, isLinux, isWindows, isWslAvailable } = usePlatform();
   const [token, setToken] = useState("");
   const [showToken, setShowToken] = useState(false);
   const [autoDetecting, setAutoDetecting] = useState(true);
@@ -89,7 +92,7 @@ export function ConnectionForm({ onSuccess }: ConnectionFormProps) {
           <p className="text-xs text-foreground-secondary leading-relaxed">
             Could not auto-detect credentials.{" "}
             <span className="text-foreground font-mono text-[11px]">
-              {getCredentialHint(isMac, isLinux)}
+              {getCredentialHint(isMac, isLinux, isWindows, isWslAvailable)}
             </span>
           </p>
         </div>

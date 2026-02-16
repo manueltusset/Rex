@@ -5,11 +5,10 @@ pub fn open_terminal_with_resume(
     project_path: &str,
     use_wsl: bool,
 ) -> Result<(), String> {
-    let resume_cmd = format!("cd '{}' && claude --resume {}", project_path, session_id);
-
     #[cfg(target_os = "macos")]
     {
         let _ = use_wsl;
+        let resume_cmd = format!("cd '{}' && claude --resume {}", project_path, session_id);
         // Cria um .command temporario que o macOS abre no Terminal.app
         // Nao requer permissao de Automacao
         let script_path = std::env::temp_dir().join("rex-resume.command");
@@ -37,6 +36,7 @@ pub fn open_terminal_with_resume(
     #[cfg(target_os = "linux")]
     {
         let _ = use_wsl;
+        let resume_cmd = format!("cd '{}' && claude --resume {}", project_path, session_id);
         let terminals = [
             ("x-terminal-emulator", vec!["-e", "bash", "-c"]),
             ("gnome-terminal", vec!["--", "bash", "-c"]),
