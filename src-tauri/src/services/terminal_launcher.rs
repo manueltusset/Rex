@@ -71,24 +71,40 @@ pub fn open_terminal_with_resume(
 
     #[cfg(target_os = "windows")]
     {
+        eprintln!(
+            "[Rex] resume: use_wsl={}, wsl_distro={:?}, session={}, path={}",
+            use_wsl, wsl_distro, session_id, project_path
+        );
+
         if use_wsl {
-            // Usa a distro escolhida pelo usuario, ou detecta automaticamente
             let distro = wsl_distro
                 .map(|s| s.to_string())
+                .filter(|s| !s.is_empty())
                 .or_else(|| crate::services::wsl::default_distro())
                 .unwrap_or_else(|| "Ubuntu".to_string());
 
-            let wsl_cmd = format!(
-                "cd '{}' && claude --resume {}",
-                project_path, session_id
+            // Script .bat evita problemas de parsing entre wt.exe e wsl.exe
+            let script_path = std::env::temp_dir().join("rex-resume.bat");
+            let script_content = format!(
+                "@echo off\r\nwsl.exe -d {} -- bash -ic \"cd '{}' && claude --resume {}\"\r\n",
+                distro, project_path, session_id
             );
-            // "new-tab --" impede que wt.exe capture o -d do wsl.exe
+
+            eprintln!("[Rex] WSL script: {}", script_content.replace("\r\n", " | "));
+
+            std::fs::write(&script_path, &script_content)
+                .map_err(|e| format!("Failed to write script: {}", e))?;
+
+            let script = script_path.to_str().unwrap_or("rex-resume.bat").to_string();
+
+            // Tenta Windows Terminal, fallback para cmd
             Command::new("wt.exe")
-                .args(["new-tab", "--", "wsl.exe", "-d", &distro, "--", "bash", "-c", &wsl_cmd])
+                .args(["new-tab", "--title", "Rex - Resume", "--", "cmd.exe", "/c", &script])
                 .spawn()
                 .or_else(|_| {
-                    Command::new("wsl.exe")
-                        .args(["-d", &distro, "--", "bash", "-c", &wsl_cmd])
+                    eprintln!("[Rex] wt.exe failed, trying cmd.exe fallback");
+                    Command::new("cmd.exe")
+                        .args(["/c", "start", "Rex", &script])
                         .spawn()
                 })
                 .map_err(|e| format!("Failed to open WSL terminal: {}", e))?;

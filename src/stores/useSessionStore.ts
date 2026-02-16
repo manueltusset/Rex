@@ -35,6 +35,7 @@ export const useSessionStore = create<SessionState>((set) => ({
 
   resume: async (sessionId: string, projectPath: string) => {
     const { useWsl, wslDistro } = useConnectionStore.getState();
+    console.log("[Rex] resume:", { sessionId, projectPath, useWsl, wslDistro });
     await resumeSession(sessionId, projectPath, useWsl, wslDistro || undefined);
   },
 }));
