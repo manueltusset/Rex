@@ -79,12 +79,14 @@ pub fn open_terminal_with_resume(
                 "cd '{}' && claude --resume {}",
                 project_path, session_id
             );
+            // Abre WSL direto no Windows Terminal (sem depender de nome de perfil)
             Command::new("wt.exe")
-                .args(["-p", &distro, "--", "bash", "-c", &wsl_cmd])
+                .args(["wsl.exe", "-d", &distro, "--", "bash", "-c", &wsl_cmd])
                 .spawn()
                 .or_else(|_| {
+                    // Fallback sem Windows Terminal
                     Command::new("wsl.exe")
-                        .args(["-d", &distro, "bash", "-c", &wsl_cmd])
+                        .args(["-d", &distro, "--", "bash", "-c", &wsl_cmd])
                         .spawn()
                 })
                 .map_err(|e| format!("Failed to open WSL terminal: {}", e))?;
