@@ -82,8 +82,9 @@ pub fn open_terminal_with_resume(
                 "cd '{}' && claude --resume {}",
                 project_path, session_id
             );
+            // "new-tab --" impede que wt.exe capture o -d do wsl.exe
             Command::new("wt.exe")
-                .args(["wsl.exe", "-d", &distro, "--", "bash", "-c", &wsl_cmd])
+                .args(["new-tab", "--", "wsl.exe", "-d", &distro, "--", "bash", "-c", &wsl_cmd])
                 .spawn()
                 .or_else(|_| {
                     Command::new("wsl.exe")
