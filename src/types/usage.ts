@@ -6,4 +6,5 @@ export interface UsageWindow {
 export interface UsageResponse {
   five_hour: UsageWindow;
   seven_day: UsageWindow;
+  seven_day_sonnet: UsageWindow | null;
 }

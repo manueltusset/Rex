@@ -15,7 +15,7 @@ export function AppLayout() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-bg-dark">
+    <div className="flex flex-col h-screen bg-bg">
       <TitleBar />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />

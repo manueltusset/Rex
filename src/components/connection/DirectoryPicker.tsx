@@ -46,12 +46,12 @@ export function DirectoryPicker({ onComplete }: DirectoryPickerProps) {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-bold text-white mb-2">
+        <h3 className="text-lg font-bold text-foreground mb-2">
           Claude Directory
         </h3>
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-muted">
           Select where your{" "}
-          <code className="bg-slate-800 px-1.5 py-0.5 rounded text-xs font-mono text-primary-light">
+          <code className="bg-ring-bg px-1.5 py-0.5 rounded text-xs font-mono text-primary-light">
             .claude
           </code>{" "}
           directory is located.
@@ -60,27 +60,27 @@ export function DirectoryPicker({ onComplete }: DirectoryPickerProps) {
 
       {/* Seletor de diretorio */}
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-slate-300">
+        <label className="block text-sm font-medium text-foreground-secondary">
           Directory Path
         </label>
         <button
           type="button"
           onClick={handleBrowse}
-          className="w-full flex items-center gap-3 px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-lg hover:border-primary/40 hover:bg-slate-800/80 transition-colors text-left cursor-pointer group"
+          className="w-full flex items-center gap-3 px-4 py-3 bg-surface border border-border rounded-lg hover:border-primary/40 hover:bg-ring-bg/80 transition-colors text-left cursor-pointer group"
         >
           <Icon
             name="folder_open"
-            className="text-slate-400 group-hover:text-primary-light transition-colors"
+            className="text-muted group-hover:text-primary-light transition-colors"
           />
           <span
-            className={`flex-1 truncate text-sm font-mono ${dir ? "text-white" : "text-slate-500"}`}
+            className={`flex-1 truncate text-sm font-mono ${dir ? "text-foreground" : "text-muted-subtle"}`}
           >
             {dir || "Click to select directory..."}
           </span>
           <Icon
             name="chevron_right"
             size="sm"
-            className="text-slate-500 group-hover:text-slate-300 transition-colors"
+            className="text-muted-subtle group-hover:text-foreground-secondary transition-colors"
           />
         </button>
       </div>
@@ -95,9 +95,9 @@ export function DirectoryPicker({ onComplete }: DirectoryPickerProps) {
       )}
 
       {isWindows && wsl && (
-        <div className="flex items-start gap-3 p-3 bg-slate-800/50 rounded-lg border border-slate-800">
+        <div className="flex items-start gap-3 p-3 bg-surface rounded-lg border border-border">
           <Icon name="info" className="text-primary-light mt-0.5" />
-          <p className="text-xs text-slate-400 leading-relaxed">
+          <p className="text-xs text-muted leading-relaxed">
             In WSL mode, the path should be a Linux path (e.g.,
             /home/user/.claude). Resume will open sessions in a WSL terminal.
           </p>

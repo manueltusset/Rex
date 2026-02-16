@@ -9,9 +9,9 @@ const variants = {
   primary:
     "bg-primary hover:bg-primary-dark text-black font-bold shadow-glow",
   secondary:
-    "bg-transparent border border-slate-700/60 text-slate-400 hover:text-white hover:border-slate-600",
+    "bg-transparent border border-border text-muted hover:text-foreground hover:border-muted-subtle",
   ghost:
-    "text-slate-400 hover:text-white hover:bg-white/5",
+    "text-muted hover:text-foreground hover:bg-foreground/5",
 };
 
 export function Button({

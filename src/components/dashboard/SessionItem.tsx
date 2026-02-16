@@ -11,18 +11,18 @@ export function SessionItem({ session }: SessionItemProps) {
   const resume = useSessionStore((s) => s.resume);
 
   return (
-    <div className="grid grid-cols-12 gap-4 px-6 py-5 hover:bg-white/[0.02] transition-colors items-center group">
+    <div className="grid grid-cols-12 gap-4 px-6 py-5 hover:bg-foreground/[0.02] transition-colors items-center group">
       {/* Diretorio */}
       <div className="col-span-4 min-w-0">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded bg-[#1A1D24] border border-border-subtle flex items-center justify-center text-slate-500 group-hover:text-primary transition-colors">
+          <div className="w-9 h-9 rounded bg-surface border border-border-subtle flex items-center justify-center text-muted-subtle group-hover:text-primary transition-colors">
             <Icon name="code" size="sm" />
           </div>
           <div className="truncate">
-            <p className="text-sm font-medium text-slate-200 font-mono truncate group-hover:text-white transition-colors">
+            <p className="text-sm font-medium text-foreground-secondary font-mono truncate group-hover:text-foreground transition-colors">
               {session.project_display}
             </p>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs text-muted-subtle mt-0.5">
               {session.message_count} messages
             </p>
           </div>
@@ -31,7 +31,7 @@ export function SessionItem({ session }: SessionItemProps) {
 
       {/* Resumo */}
       <div className="col-span-4">
-        <span className="inline-flex items-center px-2.5 py-1 rounded text-xs font-medium bg-[#1A1D24] text-slate-300 border border-border-subtle">
+        <span className="inline-flex items-center px-2.5 py-1 rounded text-xs font-medium bg-surface text-foreground-secondary border border-border-subtle">
           {session.summary.length > 40
             ? `${session.summary.substring(0, 40)}...`
             : session.summary}
@@ -39,7 +39,7 @@ export function SessionItem({ session }: SessionItemProps) {
       </div>
 
       {/* Ultima atividade */}
-      <div className="col-span-2 text-xs text-slate-500 font-mono">
+      <div className="col-span-2 text-xs text-muted-subtle font-mono">
         {formatRelativeTime(session.last_timestamp)}
       </div>
 

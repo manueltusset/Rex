@@ -14,7 +14,7 @@ export function Sidebar() {
   const { orgId, disconnect } = useConnectionStore();
 
   return (
-    <aside className="w-64 shrink-0 bg-[#0A0C10]/95 border-r border-border-subtle flex flex-col justify-between h-full backdrop-blur-sm">
+    <aside className="w-64 shrink-0 bg-sidebar border-r border-border-subtle flex flex-col justify-between h-full backdrop-blur-sm">
       <div className="p-6">
         {/* Logo */}
         <div className="flex items-center gap-3 mb-10">
@@ -26,10 +26,10 @@ export function Sidebar() {
             />
           </div>
           <div>
-            <h1 className="font-bold text-xl tracking-tight text-white leading-none font-display">
+            <h1 className="font-bold text-xl tracking-tight text-foreground leading-none font-display">
               Rex
             </h1>
-            <span className="text-[10px] text-slate-500 font-medium tracking-[0.2em] uppercase mt-0.5 block">
+            <span className="text-[10px] text-muted-subtle font-medium tracking-[0.2em] uppercase mt-0.5 block">
               Companion
             </span>
           </div>
@@ -46,7 +46,7 @@ export function Sidebar() {
                 `flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all ${
                   isActive
                     ? "bg-primary/10 border border-primary/20 text-primary"
-                    : "text-slate-400 hover:text-white hover:bg-white/5"
+                    : "text-muted hover:text-foreground hover:bg-foreground/5"
                 }`
               }
             >
@@ -76,7 +76,7 @@ export function Sidebar() {
             `flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all mb-4 group ${
               isActive
                 ? "bg-primary/10 text-primary"
-                : "text-slate-400 hover:text-white hover:bg-white/5"
+                : "text-muted hover:text-foreground hover:bg-foreground/5"
             }`
           }
         >
@@ -86,27 +86,27 @@ export function Sidebar() {
 
         <div className="glass-panel p-3 rounded-lg flex items-center gap-3 hover:border-primary/30 transition-colors cursor-pointer group">
           <div className="relative">
-            <div className="w-8 h-8 rounded-full bg-primary-dark/40 flex items-center justify-center ring-1 ring-slate-700">
+            <div className="w-8 h-8 rounded-full bg-primary-dark/40 flex items-center justify-center ring-1 ring-border">
               <Icon name="person" size="sm" className="text-primary-light" />
             </div>
-            <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-[#0A0C10] rounded-full flex items-center justify-center">
+            <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-bg rounded-full flex items-center justify-center">
               <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
             </span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-white truncate group-hover:text-primary transition-colors">
+            <p className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">
               {orgId ? `${orgId.substring(0, 16)}...` : "Connected"}
             </p>
             <button
               onClick={() => disconnect()}
-              className="text-[10px] text-slate-500 hover:text-danger transition-colors cursor-pointer uppercase tracking-wide"
+              className="text-[10px] text-muted-subtle hover:text-danger transition-colors cursor-pointer uppercase tracking-wide"
             >
               Disconnect
             </button>
           </div>
         </div>
 
-        <p className="mt-4 text-center text-[10px] text-slate-600 font-mono">
+        <p className="mt-4 text-center text-[10px] text-muted-subtle font-mono">
           Rex v{APP_VERSION}
         </p>
       </div>

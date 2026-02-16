@@ -9,23 +9,26 @@ interface ConnectionState {
   useWsl: boolean;
   isConnected: boolean;
   isLoading: boolean;
+  isHydrated: boolean;
   error: string | null;
 
   connect: (orgId: string, token: string) => Promise<void>;
   autoConnect: () => Promise<boolean>;
   disconnect: () => Promise<void>;
+  refreshToken: () => Promise<boolean>;
   setClaudeDir: (dir: string) => Promise<void>;
   setUseWsl: (val: boolean) => Promise<void>;
   loadFromStore: () => Promise<void>;
 }
 
-export const useConnectionStore = create<ConnectionState>((set) => ({
+export const useConnectionStore = create<ConnectionState>((set, get) => ({
   orgId: "",
   token: "",
   claudeDir: "",
   useWsl: false,
   isConnected: false,
   isLoading: false,
+  isHydrated: false,
   error: null,
 
   connect: async (orgId: string, token: string) => {
@@ -72,6 +75,24 @@ export const useConnectionStore = create<ConnectionState>((set) => ({
     await deleteValue("useWsl");
   },
 
+  // Re-detecta token do sistema de arquivos (Claude CLI pode ter renovado)
+  refreshToken: async () => {
+    try {
+      const newToken = await detectOAuthToken();
+      const currentToken = get().token;
+
+      if (newToken && newToken !== currentToken) {
+        await fetchUsage(newToken);
+        set({ token: newToken, error: null });
+        await setValue("token", newToken);
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  },
+
   setClaudeDir: async (dir: string) => {
     set({ claudeDir: dir });
     await setValue("claudeDir", dir);
@@ -89,9 +110,9 @@ export const useConnectionStore = create<ConnectionState>((set) => ({
       const claudeDir = (await getValue<string>("claudeDir")) ?? "";
       const useWsl = (await getValue<boolean>("useWsl")) ?? false;
       const isConnected = !!token;
-      set({ orgId, token, claudeDir, useWsl, isConnected });
+      set({ orgId, token, claudeDir, useWsl, isConnected, isHydrated: true });
     } catch {
-      // Store nao disponivel (fora do Tauri)
+      set({ isHydrated: true });
     }
   },
 }));

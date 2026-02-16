@@ -7,21 +7,36 @@ import { HistoryPage } from "@/pages/HistoryPage";
 import { ProjectsPage } from "@/pages/ProjectsPage";
 import { UsagePage } from "@/pages/UsagePage";
 import { SettingsPage } from "@/pages/SettingsPage";
+import { TrayPage } from "@/pages/TrayPage";
+import { Spinner } from "@/components/ui/Spinner";
 import { useConnectionStore } from "@/stores/useConnectionStore";
 import { useSettingsStore } from "@/stores/useSettingsStore";
+import { useTheme } from "@/hooks/useTheme";
 import { ROUTES } from "@/utils/constants";
 
 export default function App() {
   const loadFromStore = useConnectionStore((s) => s.loadFromStore);
+  const isHydrated = useConnectionStore((s) => s.isHydrated);
   const loadSettings = useSettingsStore((s) => s.loadSettings);
+
+  useTheme();
 
   useEffect(() => {
     loadFromStore();
     loadSettings();
   }, [loadFromStore, loadSettings]);
 
+  if (!isHydrated) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-bg">
+        <Spinner />
+      </div>
+    );
+  }
+
   return (
     <Routes>
+      <Route path={ROUTES.TRAY} element={<TrayPage />} />
       <Route path={ROUTES.CONNECT} element={<ConnectionPage />} />
       <Route element={<AppLayout />}>
         <Route index element={<DashboardPage />} />

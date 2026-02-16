@@ -27,7 +27,7 @@ function WindowControlsLinux({
     <div className="flex items-center h-full">
       <button
         onClick={onMinimize}
-        className="w-12 h-full flex items-center justify-center text-slate-400 hover:bg-slate-700/50 transition-colors"
+        className="w-12 h-full flex items-center justify-center text-muted hover:bg-ring-bg/50 transition-colors"
         title="Minimize"
       >
         <svg width="10" height="1" viewBox="0 0 10 1" fill="currentColor">
@@ -36,7 +36,7 @@ function WindowControlsLinux({
       </button>
       <button
         onClick={onMaximize}
-        className="w-12 h-full flex items-center justify-center text-slate-400 hover:bg-slate-700/50 transition-colors"
+        className="w-12 h-full flex items-center justify-center text-muted hover:bg-ring-bg/50 transition-colors"
         title={maximized ? "Restore" : "Maximize"}
       >
         {maximized ? (
@@ -66,7 +66,7 @@ function WindowControlsLinux({
       </button>
       <button
         onClick={onClose}
-        className="w-12 h-full flex items-center justify-center text-slate-400 hover:bg-red-500 hover:text-white transition-colors"
+        className="w-12 h-full flex items-center justify-center text-muted hover:bg-red-500 hover:text-white transition-colors"
         title="Close"
       >
         <svg

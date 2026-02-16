@@ -14,7 +14,7 @@ export function SettingsPage() {
   const navigate = useNavigate();
   const { claudeDir, useWsl, orgId, setClaudeDir, setUseWsl, disconnect } =
     useConnectionStore();
-  const { refreshInterval, setRefreshInterval } = useSettingsStore();
+  const { refreshInterval, setRefreshInterval, notificationsEnabled, setNotificationsEnabled, theme, setTheme } = useSettingsStore();
   const { isWindows, isWslAvailable } = usePlatform();
 
   const [dirInput, setDirInput] = useState(claudeDir);
@@ -44,7 +44,7 @@ export function SettingsPage() {
         <p className="text-sm font-medium text-primary-light/70 mb-1 font-mono tracking-wide uppercase">
           Configuration
         </p>
-        <h2 className="text-3xl font-bold text-white tracking-tight">
+        <h2 className="text-3xl font-bold text-foreground tracking-tight">
           Settings
         </h2>
       </header>
@@ -52,17 +52,17 @@ export function SettingsPage() {
       <div className="space-y-6 max-w-2xl">
         {/* Conexao */}
         <Card>
-          <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+          <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
             <Icon name="link" className="text-primary-light" />
             Connection
           </h3>
           <div className="space-y-3 text-sm">
-            <div className="flex justify-between py-2 border-b border-border-dark">
-              <span className="text-slate-400">Organization ID</span>
-              <span className="text-white font-mono">{orgId || "--"}</span>
+            <div className="flex justify-between py-2 border-b border-border">
+              <span className="text-muted">Organization ID</span>
+              <span className="text-foreground font-mono">{orgId || "--"}</span>
             </div>
             <div className="flex justify-between py-2">
-              <span className="text-slate-400">Status</span>
+              <span className="text-muted">Status</span>
               <span className="text-primary-light font-mono flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary-light" />
                 Connected
@@ -81,7 +81,7 @@ export function SettingsPage() {
 
         {/* Diretorio */}
         <Card>
-          <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+          <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
             <Icon name="folder_open" className="text-primary-light" />
             Claude Directory
           </h3>
@@ -118,7 +118,7 @@ export function SettingsPage() {
 
         {/* Refresh */}
         <Card>
-          <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+          <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
             <Icon name="refresh" className="text-primary-light" />
             Auto Refresh
           </h3>
@@ -130,7 +130,7 @@ export function SettingsPage() {
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${
                   refreshInterval === opt.value
                     ? "bg-primary/20 text-primary-light border border-primary/30"
-                    : "bg-surface-dark text-slate-400 border border-transparent hover:border-border-dark"
+                    : "bg-surface text-muted border border-transparent hover:border-border"
                 }`}
               >
                 {opt.label}
@@ -139,20 +139,61 @@ export function SettingsPage() {
           </div>
         </Card>
 
+        {/* Tema */}
+        <Card>
+          <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
+            <Icon name="palette" className="text-primary-light" />
+            Theme
+          </h3>
+          <div className="flex gap-2">
+            {([
+              { label: "Light", value: "light" as const },
+              { label: "Dark", value: "dark" as const },
+              { label: "System", value: "system" as const },
+            ]).map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => setTheme(opt.value)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${
+                  theme === opt.value
+                    ? "bg-primary/20 text-primary-light border border-primary/30"
+                    : "bg-surface text-muted border border-transparent hover:border-border"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </Card>
+
+        {/* Notificacoes */}
+        <Card>
+          <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
+            <Icon name="notifications" className="text-primary-light" />
+            Notifications
+          </h3>
+          <Toggle
+            checked={notificationsEnabled}
+            onChange={(val) => setNotificationsEnabled(val)}
+            label="Usage Alerts"
+            description="Notify when usage reaches 80%, 90%, or 100%"
+          />
+        </Card>
+
         {/* Info */}
         <Card>
-          <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+          <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
             <Icon name="info" className="text-primary-light" />
             About
           </h3>
           <div className="space-y-2 text-sm">
-            <div className="flex justify-between py-2 border-b border-border-dark">
-              <span className="text-slate-400">Version</span>
-              <span className="text-white font-mono">{APP_VERSION}</span>
+            <div className="flex justify-between py-2 border-b border-border">
+              <span className="text-muted">Version</span>
+              <span className="text-foreground font-mono">{APP_VERSION}</span>
             </div>
             <div className="flex justify-between py-2">
-              <span className="text-slate-400">Runtime</span>
-              <span className="text-white font-mono">Tauri v2</span>
+              <span className="text-muted">Runtime</span>
+              <span className="text-foreground font-mono">Tauri v2</span>
             </div>
           </div>
         </Card>

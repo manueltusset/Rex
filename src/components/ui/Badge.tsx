@@ -9,8 +9,8 @@ const variants = {
   green: "bg-primary/10 text-primary border-primary/20",
   accent: "bg-rex-accent/10 text-rex-accent border-rex-accent/20",
   danger: "bg-danger/10 text-danger border-danger/20",
-  muted: "bg-slate-800 text-slate-400 border-slate-700/50",
-  default: "bg-[#1A1D24] text-slate-300 border-border-subtle",
+  muted: "bg-ring-bg text-muted border-border",
+  default: "bg-surface text-foreground-secondary border-border-subtle",
 };
 
 export function Badge({ children, variant = "default" }: BadgeProps) {

@@ -9,11 +9,11 @@ export function Toggle({ checked, onChange, label, description }: ToggleProps) {
   return (
     <label className="flex items-center justify-between cursor-pointer group">
       <div>
-        <span className="text-sm font-medium text-slate-300 group-hover:text-primary-light transition-colors">
+        <span className="text-sm font-medium text-foreground-secondary group-hover:text-primary-light transition-colors">
           {label}
         </span>
         {description && (
-          <p className="text-xs text-slate-500 mt-0.5">{description}</p>
+          <p className="text-xs text-muted-subtle mt-0.5">{description}</p>
         )}
       </div>
       <button
@@ -22,7 +22,7 @@ export function Toggle({ checked, onChange, label, description }: ToggleProps) {
         aria-checked={checked}
         onClick={() => onChange(!checked)}
         className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-          checked ? "bg-primary" : "bg-surface-dark"
+          checked ? "bg-primary" : "bg-ring-bg"
         }`}
       >
         <span

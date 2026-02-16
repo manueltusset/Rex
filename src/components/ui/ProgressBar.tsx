@@ -24,7 +24,7 @@ export function ProgressBar({
   const clamped = Math.min(100, Math.max(0, value));
   return (
     <div
-      className={`w-full bg-surface-dark rounded-full ${sizeMap[size]} overflow-hidden`}
+      className={`w-full bg-surface rounded-full ${sizeMap[size]} overflow-hidden`}
     >
       <div
         className={`${colorMap[variant]} ${sizeMap[size]} rounded-full transition-all duration-500`}

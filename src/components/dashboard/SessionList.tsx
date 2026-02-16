@@ -24,12 +24,12 @@ export function SessionList() {
       {/* Header */}
       <div className="p-6 border-b border-border-subtle flex flex-col sm:flex-row justify-between items-center gap-4">
         <div>
-          <h3 className="text-lg font-bold text-white flex items-center gap-2 font-display">
+          <h3 className="text-lg font-bold text-foreground flex items-center gap-2 font-display">
             <Icon name="terminal" className="text-primary" />
             Recent Local Sessions
           </h3>
-          <p className="text-xs text-slate-500 mt-1.5 font-mono">
-            <span className="text-slate-600">Found in:</span>{" "}
+          <p className="text-xs text-muted-subtle mt-1.5 font-mono">
+            <span className="text-muted-subtle">Found in:</span>{" "}
             <span className="text-primary/80">~/.claude</span>
           </p>
         </div>
@@ -37,10 +37,10 @@ export function SessionList() {
           <Icon
             name="search"
             size="sm"
-            className="absolute left-3 top-2.5 text-slate-500 group-focus-within:text-primary transition-colors"
+            className="absolute left-3 top-2.5 text-muted-subtle group-focus-within:text-primary transition-colors"
           />
           <input
-            className="pl-10 pr-4 py-2 bg-[#0A0C10] border border-border-subtle rounded-lg text-sm text-white focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 w-full sm:w-72 placeholder-slate-600 transition-all"
+            className="pl-10 pr-4 py-2 bg-input-bg border border-border-subtle rounded-lg text-sm text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 w-full sm:w-72 placeholder-muted-subtle transition-all"
             placeholder="Filter by directory..."
             value={filter}
             onChange={(e) => {
@@ -52,7 +52,7 @@ export function SessionList() {
       </div>
 
       {/* Cabecalho da tabela */}
-      <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-[#0A0C10]/30 border-b border-border-subtle text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+      <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-bg/30 border-b border-border-subtle text-[11px] font-semibold text-muted-subtle uppercase tracking-wider">
         <div className="col-span-4">Directory / Context</div>
         <div className="col-span-4">Summary</div>
         <div className="col-span-2">Last Active</div>
@@ -62,11 +62,11 @@ export function SessionList() {
       {/* Lista */}
       <div className="divide-y divide-border-subtle flex-1">
         {isLoading && sessions.length === 0 ? (
-          <div className="px-6 py-12 text-center text-slate-500">
+          <div className="px-6 py-12 text-center text-muted-subtle">
             Loading sessions...
           </div>
         ) : paginated.length === 0 ? (
-          <div className="px-6 py-12 text-center text-slate-500">
+          <div className="px-6 py-12 text-center text-muted-subtle">
             {filter ? "No sessions match the filter" : "No sessions found"}
           </div>
         ) : (
@@ -77,16 +77,16 @@ export function SessionList() {
       </div>
 
       {/* Paginacao */}
-      <div className="px-6 py-4 border-t border-border-subtle flex justify-between items-center bg-[#0A0C10]/20">
-        <span className="text-xs text-slate-500 font-mono">
+      <div className="px-6 py-4 border-t border-border-subtle flex justify-between items-center bg-bg/20">
+        <span className="text-xs text-muted-subtle font-mono">
           Showing {paginated.length} of {filtered.length} local sessions
         </span>
         <div className="flex gap-2">
           <button
-            className={`px-3 py-1.5 rounded bg-[#1A1D24] border border-border-subtle text-xs transition-colors ${
+            className={`px-3 py-1.5 rounded bg-surface border border-border-subtle text-xs transition-colors ${
               page === 0
-                ? "text-slate-600 cursor-not-allowed"
-                : "text-slate-400 hover:border-slate-600 hover:text-slate-200 cursor-pointer"
+                ? "text-muted-subtle cursor-not-allowed"
+                : "text-muted hover:border-muted-subtle hover:text-foreground-secondary cursor-pointer"
             }`}
             disabled={page === 0}
             onClick={() => setPage((p) => Math.max(0, p - 1))}
@@ -94,10 +94,10 @@ export function SessionList() {
             Previous
           </button>
           <button
-            className={`px-3 py-1.5 rounded bg-[#1A1D24] border border-border-subtle text-xs transition-colors ${
+            className={`px-3 py-1.5 rounded bg-surface border border-border-subtle text-xs transition-colors ${
               page >= totalPages - 1
-                ? "text-slate-600 cursor-not-allowed"
-                : "text-slate-400 hover:border-slate-600 hover:text-slate-200 cursor-pointer"
+                ? "text-muted-subtle cursor-not-allowed"
+                : "text-muted hover:border-muted-subtle hover:text-foreground-secondary cursor-pointer"
             }`}
             disabled={page >= totalPages - 1}
             onClick={() => setPage((p) => p + 1)}

@@ -10,4 +10,6 @@ pub struct UsageWindow {
 pub struct UsageResponse {
     pub five_hour: UsageWindow,
     pub seven_day: UsageWindow,
+    #[serde(default)]
+    pub seven_day_sonnet: Option<UsageWindow>,
 }

@@ -43,11 +43,13 @@ Rex is a native desktop app that sits alongside your [Claude Code](https://docs.
 
 | Feature | Description |
 |---------|-------------|
-| **Usage Monitoring** | Real-time 5-hour session and 7-day rolling rate limit visualization with circular progress indicators |
+| **Usage Monitoring** | Real-time visualization of 5h session, 7d rolling, and Sonnet weekly rate limits with color-coded circular progress (green/yellow/red thresholds) |
+| **Tray Popup** | Quick-access popup from the system tray with compact usage cards and one-click dashboard access |
 | **Session Management** | Browse, search, and filter local Claude Code sessions with project context and message counts |
 | **One-Click Resume** | Resume any session directly in a native terminal window |
-| **Auto-Authentication** | Detects OAuth tokens from credentials file, macOS Keychain, or environment variables |
-| **Glassmorphism UI** | Modern dark theme with glass effects, Inter + Space Grotesk typography |
+| **Smart Notifications** | Desktop alerts when usage crosses 80%, 90%, or 100% thresholds (no duplicates on app start, only highest threshold fires) |
+| **Auto-Authentication** | Detects OAuth tokens from credentials file, macOS Keychain, or environment variables with automatic refresh on expiration |
+| **Theme Support** | Light, dark, and system-follow modes with full theme across dashboard and tray popup |
 | **Cross-Platform** | Native traffic lights on macOS, custom titlebar on Linux/Windows, WSL support |
 
 ---
@@ -79,6 +81,8 @@ Rex is a native desktop app that sits alongside your [Claude Code](https://docs.
 | `tauri-plugin-store` | Persistent key-value storage |
 | `tauri-plugin-shell` | Shell command execution |
 | `tauri-plugin-dialog` | Native OS file dialogs |
+| `tauri-plugin-notification` | Desktop notifications |
+| `tauri-plugin-positioner` | Tray popup positioning |
 | `objc2-app-kit` | macOS NSWindow customization |
 
 ---
@@ -93,27 +97,45 @@ src-tauri/                      Rust backend (Tauri v2)
       platform.rs                 OS/platform info
       sessions.rs                 Session listing and reading
       terminal.rs                 Terminal launch for resume
+      tray.rs                     System tray tooltip and icon
       usage.rs                    API usage fetching
     models/                     Data structures
       session.rs                  Session metadata types
-      usage.rs                    Usage response types
+      usage.rs                    Usage response types (5h, 7d, Sonnet)
     services/                   Core business logic
       anthropic_client.rs         Anthropic API client (OAuth)
       credentials.rs              Token auto-detection (file, keychain, env)
       session_parser.rs           JSONL session file parser
       terminal_launcher.rs        Cross-platform terminal spawning
-    lib.rs                      App entry, window creation, macOS NSWindow config
+    lib.rs                      App entry, window/tray creation, macOS NSWindow config
 
 src/                            React frontend
   components/
     connection/                 Auth flow (ConnectionForm, DirectoryPicker)
-    dashboard/                  Dashboard widgets (UsageCard, SessionList, etc.)
+    dashboard/                  Dashboard widgets (UsageCard, SessionList)
     layout/                     App shell (Sidebar, TitleBar, AppLayout)
     ui/                         Reusable primitives (Card, Button, Badge, etc.)
-  pages/                        Route pages (Dashboard, History, Projects, Usage, Settings)
+  hooks/
+    useAutoRefresh.ts             Periodic data refresh based on settings
+    useTheme.ts                   Light/dark/system theme management
+    usePlatform.ts                OS and WSL detection
+  pages/
+    DashboardPage.tsx             Main overview (3 usage cards + session list)
+    UsagePage.tsx                 Detailed rate limit view
+    HistoryPage.tsx               Full session history
+    ProjectsPage.tsx              Sessions grouped by project
+    SettingsPage.tsx              App configuration
+    ConnectionPage.tsx            Initial auth setup
+    TrayPage.tsx                  Compact tray popup (3 usage cards)
   stores/                       Zustand state management
-  services/                     Tauri invoke wrappers
-  lib/                          Platform detection utilities
+    useUsageStore.ts              Usage data with auto token refresh on 401
+    useConnectionStore.ts         Auth credentials and token management
+    useSessionStore.ts            Session listing and resume
+    useSettingsStore.ts           Theme, refresh interval, notifications
+  services/
+    api.ts                        Tauri invoke wrappers
+    store.ts                      Persistent storage helpers
+    notifications.ts              Threshold-based desktop notifications
 ```
 
 ---
@@ -164,6 +186,8 @@ Rex auto-detects your OAuth token on first launch from:
 2. `~/.claude/.credentials.json` (written by `claude` CLI on login)
 3. macOS Keychain (`Claude Code-credentials` entry)
 
+When a token expires (401), Rex automatically re-detects from the file system (Claude CLI may have refreshed it). If the token is still invalid, it disconnects and redirects to the connection page.
+
 ### Manual fallback
 
 If auto-detection fails, you can connect manually with your **Organization ID** and **Session Key**:
@@ -176,6 +200,25 @@ If auto-detection fails, you can connect manually with your **Organization ID** 
    - **Session Key** — found in the **`Set-Cookie` response header** (value of the `sessionKey` cookie)
 
 > Credentials are stored locally via `tauri-plugin-store` and never leave your machine.
+
+---
+
+## Usage Monitoring
+
+Rex tracks three Anthropic rate limits:
+
+| Limit | Color | Description |
+|-------|-------|-------------|
+| **Session (5h)** | Green | 5-hour sliding window session limit |
+| **Weekly (7d)** | Purple | 7-day rolling aggregate limit |
+| **Sonnet (7d)** | Blue | 7-day Sonnet model-specific limit |
+
+Circular progress indicators change color at thresholds:
+- **< 80%** — Card accent color (green/purple/blue)
+- **>= 80%** — Yellow (warning)
+- **>= 90%** — Red (critical)
+
+Desktop notifications fire once per threshold (80%, 90%, 100%) and suppress duplicates on app startup.
 
 ---
 

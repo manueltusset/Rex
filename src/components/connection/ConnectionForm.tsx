@@ -49,7 +49,7 @@ export function ConnectionForm({ onSuccess }: ConnectionFormProps) {
     return (
       <div className="flex flex-col items-center gap-4 py-6">
         <Spinner />
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-muted">
           Detecting Claude Code credentials...
         </p>
       </div>
@@ -61,13 +61,13 @@ export function ConnectionForm({ onSuccess }: ConnectionFormProps) {
       {autoFailed && (
         <div className="flex items-start gap-3 p-3 bg-warning/10 rounded-lg border border-warning/20">
           <Icon name="info" className="text-warning mt-0.5" />
-          <p className="text-xs text-slate-300 leading-relaxed">
+          <p className="text-xs text-foreground-secondary leading-relaxed">
             Could not auto-detect credentials. Paste your OAuth token from{" "}
-            <span className="text-white font-medium">
+            <span className="text-foreground font-medium">
               ~/.claude/.credentials.json
             </span>{" "}
             or run{" "}
-            <span className="text-white font-mono text-[11px]">
+            <span className="text-foreground font-mono text-[11px]">
               security find-generic-password -s "Claude Code-credentials" -w
             </span>{" "}
             in Terminal.
@@ -87,7 +87,7 @@ export function ConnectionForm({ onSuccess }: ConnectionFormProps) {
           <button
             type="button"
             onClick={() => setShowToken(!showToken)}
-            className="text-slate-400 hover:text-slate-200 cursor-pointer"
+            className="text-muted hover:text-foreground-secondary cursor-pointer"
           >
             <Icon name={showToken ? "visibility" : "visibility_off"} />
           </button>
@@ -109,9 +109,9 @@ export function ConnectionForm({ onSuccess }: ConnectionFormProps) {
         )}
       </Button>
 
-      <div className="flex items-start gap-3 p-3 bg-slate-800/50 rounded-lg border border-slate-800">
+      <div className="flex items-start gap-3 p-3 bg-surface rounded-lg border border-border">
         <Icon name="lock" className="text-primary mt-0.5" />
-        <p className="text-xs text-slate-400 leading-relaxed">
+        <p className="text-xs text-muted leading-relaxed">
           Your credentials are stored locally on your device using Tauri's
           secure storage system. They are never sent to external servers.
         </p>

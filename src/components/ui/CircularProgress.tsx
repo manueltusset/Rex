@@ -23,7 +23,7 @@ export function CircularProgress({
     >
       <svg className="transform -rotate-90" width={size} height={size}>
         <circle
-          className="text-slate-800"
+          className="text-ring-bg"
           cx={center}
           cy={center}
           r={radius}
@@ -32,7 +32,7 @@ export function CircularProgress({
           strokeWidth={strokeWidth}
         />
         <circle
-          className={`${colorClass} drop-shadow-[0_0_8px_rgba(16,185,129,0.4)]`}
+          className={colorClass}
           cx={center}
           cy={center}
           r={radius}
@@ -44,7 +44,7 @@ export function CircularProgress({
           strokeLinecap="round"
         />
       </svg>
-      <span className="absolute text-xs font-bold text-white">
+      <span className="absolute text-xs font-bold text-foreground">
         {Math.round(value)}%
       </span>
     </div>
