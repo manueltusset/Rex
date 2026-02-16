@@ -35,3 +35,7 @@ export async function getPlatformInfo(): Promise<PlatformInfo> {
 export async function detectOAuthToken(): Promise<string> {
   return invoke<string>("detect_oauth_token");
 }
+
+export async function cliRefreshToken(useWsl?: boolean): Promise<string> {
+  return invoke<string>("cli_refresh_token", { useWsl });
+}

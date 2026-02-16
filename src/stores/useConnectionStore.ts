@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { getValue, setValue, deleteValue } from "@/services/store";
-import { fetchUsage, detectOAuthToken } from "@/services/api";
+import { fetchUsage, detectOAuthToken, cliRefreshToken } from "@/services/api";
 
 interface ConnectionState {
   orgId: string;
@@ -64,8 +64,18 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
       await setValue("token", token);
       return "success";
     } catch {
-      set({ isLoading: false });
-      return "expired";
+      // Token expirado - tenta refresh via Claude CLI
+      try {
+        const { useWsl } = get();
+        const refreshed = await cliRefreshToken(useWsl);
+        await fetchUsage(refreshed);
+        set({ token: refreshed, isConnected: true, isLoading: false });
+        await setValue("token", refreshed);
+        return "success";
+      } catch {
+        set({ isLoading: false });
+        return "expired";
+      }
     }
   },
 
@@ -83,9 +93,10 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
     await deleteValue("useWsl");
   },
 
-  // Re-detecta token do sistema de arquivos (Claude CLI pode ter renovado)
+  // Re-detecta token ou invoca CLI para renovar
   refreshToken: async () => {
     try {
+      // Tenta re-ler (CLI pode ter renovado em outro terminal)
       const newToken = await detectOAuthToken();
       const currentToken = get().token;
 
@@ -95,6 +106,17 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
         await setValue("token", newToken);
         return true;
       }
+
+      // Mesmo token - tenta refresh via CLI
+      const { useWsl } = get();
+      const refreshed = await cliRefreshToken(useWsl);
+      if (refreshed && refreshed !== currentToken) {
+        await fetchUsage(refreshed);
+        set({ token: refreshed, error: null });
+        await setValue("token", refreshed);
+        return true;
+      }
+
       return false;
     } catch {
       return false;
