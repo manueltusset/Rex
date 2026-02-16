@@ -13,7 +13,7 @@ interface ConnectionState {
   error: string | null;
 
   connect: (orgId: string, token: string) => Promise<void>;
-  autoConnect: () => Promise<boolean>;
+  autoConnect: () => Promise<"success" | "not_found" | "expired">;
   disconnect: () => Promise<void>;
   refreshToken: () => Promise<boolean>;
   setClaudeDir: (dir: string) => Promise<void>;
@@ -49,15 +49,23 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
 
   autoConnect: async () => {
     set({ isLoading: true, error: null });
+
+    let token: string;
     try {
-      const token = await detectOAuthToken();
+      token = await detectOAuthToken();
+    } catch {
+      set({ isLoading: false });
+      return "not_found";
+    }
+
+    try {
       await fetchUsage(token);
       set({ token, isConnected: true, isLoading: false });
       await setValue("token", token);
-      return true;
+      return "success";
     } catch {
       set({ isLoading: false });
-      return false;
+      return "expired";
     }
   },
 

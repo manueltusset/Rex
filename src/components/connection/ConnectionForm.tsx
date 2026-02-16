@@ -26,19 +26,19 @@ export function ConnectionForm({ onSuccess }: ConnectionFormProps) {
   const [token, setToken] = useState("");
   const [showToken, setShowToken] = useState(false);
   const [autoDetecting, setAutoDetecting] = useState(true);
-  const [autoFailed, setAutoFailed] = useState(false);
+  const [autoResult, setAutoResult] = useState<"not_found" | "expired" | null>(null);
 
   // Tenta auto-detectar o token ao montar
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const success = await autoConnect();
+      const result = await autoConnect();
       if (cancelled) return;
-      if (success) {
+      if (result === "success") {
         onSuccess();
       } else {
         setAutoDetecting(false);
-        setAutoFailed(true);
+        setAutoResult(result);
       }
     })();
     return () => {
@@ -70,7 +70,20 @@ export function ConnectionForm({ onSuccess }: ConnectionFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {autoFailed && (
+      {autoResult === "expired" && (
+        <div className="flex items-start gap-3 p-3 bg-danger/10 rounded-lg border border-danger/20">
+          <Icon name="error" className="text-danger mt-0.5" />
+          <p className="text-xs text-foreground-secondary leading-relaxed">
+            Token found but expired. Run{" "}
+            <span className="text-foreground font-mono text-[11px]">
+              claude
+            </span>{" "}
+            in your terminal to re-authenticate, then reopen Rex.
+          </p>
+        </div>
+      )}
+
+      {autoResult === "not_found" && (
         <div className="flex items-start gap-3 p-3 bg-warning/10 rounded-lg border border-warning/20">
           <Icon name="info" className="text-warning mt-0.5" />
           <p className="text-xs text-foreground-secondary leading-relaxed">
