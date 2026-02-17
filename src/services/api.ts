@@ -1,6 +1,8 @@
 import { invoke } from "@tauri-apps/api/core";
 import type { UsageResponse } from "@/types/usage";
 import type { SessionMeta, SessionEntry, SearchMatch, PlatformInfo } from "@/types/session";
+import type { AccountInfo } from "@/types/account";
+import type { ProjectMetrics, GlobalStats } from "@/types/stats";
 
 export async function fetchUsage(token: string): Promise<UsageResponse> {
   return invoke<UsageResponse>("fetch_usage", { token });
@@ -50,4 +52,16 @@ export async function detectOAuthToken(wslDistro?: string): Promise<string> {
 
 export async function refreshOAuthToken(wslDistro?: string): Promise<string> {
   return invoke<string>("refresh_oauth_token", { wslDistro });
+}
+
+export async function readAccountInfo(): Promise<AccountInfo> {
+  return invoke<AccountInfo>("read_account_info");
+}
+
+export async function readProjectStats(): Promise<ProjectMetrics[]> {
+  return invoke<ProjectMetrics[]>("read_project_stats");
+}
+
+export async function readGlobalStats(): Promise<GlobalStats> {
+  return invoke<GlobalStats>("read_global_stats");
 }

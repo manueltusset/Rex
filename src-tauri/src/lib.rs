@@ -2,10 +2,12 @@ mod commands;
 mod models;
 mod services;
 
+use commands::account::read_account_info;
 use commands::auth::{detect_oauth_token, refresh_oauth_token};
 use commands::mcp::list_mcp_servers;
 use commands::platform::get_platform_info;
 use commands::sessions::{list_sessions, read_session, search_sessions};
+use commands::stats::{read_global_stats, read_project_stats};
 use commands::terminal::resume_session;
 use commands::tray::{clear_tray_display, exit_app, update_tray_icon, update_tray_tooltip};
 use commands::usage::fetch_usage;
@@ -95,6 +97,9 @@ pub fn run() {
             update_tray_icon,
             clear_tray_display,
             list_mcp_servers,
+            read_account_info,
+            read_project_stats,
+            read_global_stats,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

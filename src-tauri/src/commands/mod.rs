@@ -1,7 +1,9 @@
+pub mod account;
 pub mod auth;
 pub mod mcp;
 pub mod platform;
 pub mod sessions;
+pub mod stats;
 pub mod terminal;
 pub mod tray;
 pub mod usage;
