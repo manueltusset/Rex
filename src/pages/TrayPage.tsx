@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useUsageStore } from "@/stores/useUsageStore";
 import { useConnectionStore } from "@/stores/useConnectionStore";
@@ -109,6 +110,10 @@ export function TrayPage() {
     return () => { unlisten.then((fn) => fn()); };
   }, [fetch]);
 
+  const handleExit = async () => {
+    await invoke("exit_app");
+  };
+
   const handleOpenDashboard = async () => {
     const { WebviewWindow } = await import("@tauri-apps/api/webviewWindow");
     const main = await WebviewWindow.getByLabel("main");
@@ -138,12 +143,20 @@ export function TrayPage() {
           <img src="/rex-logo.png" alt="Rex" className="w-7 h-7" />
           <span className="text-base font-bold font-display">Rex</span>
         </div>
-        <button
-          onClick={handleOpenDashboard}
-          className="px-3 py-1.5 rounded-lg text-xs font-medium text-muted hover:text-foreground hover:bg-foreground/5 transition-all cursor-pointer"
-        >
-          Dashboard
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={handleOpenDashboard}
+            className="px-3 py-1.5 rounded-lg text-xs font-medium text-muted hover:text-foreground hover:bg-foreground/5 transition-all cursor-pointer"
+          >
+            Dashboard
+          </button>
+          <button
+            onClick={handleExit}
+            className="px-3 py-1.5 rounded-lg text-xs font-medium text-muted-subtle hover:text-danger hover:bg-danger/5 transition-all cursor-pointer"
+          >
+            Exit
+          </button>
+        </div>
       </div>
 
       {/* Cards */}

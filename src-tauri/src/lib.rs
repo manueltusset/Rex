@@ -2,11 +2,11 @@ mod commands;
 mod models;
 mod services;
 
-use commands::auth::{detect_oauth_token, cli_refresh_token};
+use commands::auth::{detect_oauth_token, refresh_oauth_token};
 use commands::platform::get_platform_info;
 use commands::sessions::{list_sessions, read_session, search_sessions};
 use commands::terminal::resume_session;
-use commands::tray::{update_tray_icon, update_tray_tooltip};
+use commands::tray::{exit_app, update_tray_icon, update_tray_tooltip};
 use commands::usage::fetch_usage;
 
 use tauri::Manager;
@@ -82,7 +82,7 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             detect_oauth_token,
-            cli_refresh_token,
+            refresh_oauth_token,
             fetch_usage,
             list_sessions,
             read_session,
@@ -90,6 +90,7 @@ pub fn run() {
             resume_session,
             get_platform_info,
             update_tray_tooltip,
+            exit_app,
             update_tray_icon,
         ])
         .run(tauri::generate_context!())

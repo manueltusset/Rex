@@ -6,6 +6,6 @@ pub async fn detect_oauth_token(wsl_distro: Option<String>) -> Result<String, St
 }
 
 #[tauri::command]
-pub async fn cli_refresh_token(use_wsl: Option<bool>, wsl_distro: Option<String>) -> Result<String, String> {
-    credentials::try_cli_refresh(use_wsl.unwrap_or(false), wsl_distro.as_deref()).await
+pub async fn refresh_oauth_token(wsl_distro: Option<String>) -> Result<String, String> {
+    credentials::refresh_oauth_token(wsl_distro.as_deref()).await
 }

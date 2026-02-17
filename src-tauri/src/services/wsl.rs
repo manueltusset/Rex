@@ -18,8 +18,12 @@ fn decode_wsl_output(bytes: &[u8]) -> String {
 /// Lista todas as distros WSL instaladas
 #[cfg(target_os = "windows")]
 pub fn list_distros() -> Vec<String> {
+    use std::os::windows::process::CommandExt;
+    const CREATE_NO_WINDOW: u32 = 0x08000000;
+
     let output = match std::process::Command::new("wsl.exe")
         .args(["--list", "--quiet"])
+        .creation_flags(CREATE_NO_WINDOW)
         .output()
     {
         Ok(o) if o.status.success() => o,
@@ -52,9 +56,12 @@ pub fn linux_to_unc(linux_path: &str, distro: &str) -> String {
 /// Detecta o home do usuario dentro do WSL
 #[cfg(target_os = "windows")]
 pub fn wsl_home(distro: &str) -> Option<String> {
-    // Usa bash -c para garantir expansao de $HOME
+    use std::os::windows::process::CommandExt;
+    const CREATE_NO_WINDOW: u32 = 0x08000000;
+
     let output = std::process::Command::new("wsl.exe")
         .args(["-d", distro, "--", "bash", "-c", "echo $HOME"])
+        .creation_flags(CREATE_NO_WINDOW)
         .output()
         .ok()?;
 
