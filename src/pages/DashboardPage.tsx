@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { SessionList } from "@/components/dashboard/SessionList";
+import { StatsOverview } from "@/components/dashboard/StatsOverview";
 import { ActivityRings } from "@/components/ui/ActivityRings";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
@@ -149,6 +150,9 @@ export function DashboardPage() {
           </div>
         </div>
       </Card>
+
+      {/* Activity Overview */}
+      <StatsOverview />
 
       {/* MCP Status (compacto) */}
       {mcpServers.length > 0 && (

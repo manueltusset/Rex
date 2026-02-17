@@ -2,6 +2,7 @@ import { NavLink } from "react-router-dom";
 import { Icon } from "@/components/ui/Icon";
 import { ROUTES, APP_VERSION } from "@/utils/constants";
 import { useConnectionStore } from "@/stores/useConnectionStore";
+import { useAccountStore } from "@/stores/useAccountStore";
 
 const navItems = [
   { to: ROUTES.DASHBOARD, icon: "dashboard", label: "Dashboard" },
@@ -13,6 +14,7 @@ const navItems = [
 
 export function Sidebar() {
   const { orgId, disconnect } = useConnectionStore();
+  const account = useAccountStore((s) => s.account);
 
   return (
     <aside className="w-64 shrink-0 bg-sidebar border-r border-border-subtle flex flex-col justify-between h-full backdrop-blur-sm">
@@ -95,15 +97,26 @@ export function Sidebar() {
             </span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">
-              {orgId ? `${orgId.substring(0, 16)}...` : "Connected"}
-            </p>
-            <button
-              onClick={() => disconnect()}
-              className="text-[10px] text-muted-subtle hover:text-danger transition-colors cursor-pointer uppercase tracking-wide"
-            >
-              Disconnect
-            </button>
+            <div className="flex items-center gap-1.5">
+              <p className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">
+                {account?.displayName || (orgId ? `${orgId.substring(0, 16)}...` : "Connected")}
+              </p>
+              {account?.organizationRole && (
+                <span className="px-1 py-0.5 rounded text-[9px] font-medium bg-primary/10 text-primary border border-primary/20 shrink-0">
+                  {account.organizationRole}
+                </span>
+              )}
+            </div>
+            {account?.emailAddress ? (
+              <p className="text-[10px] text-muted-subtle truncate">{account.emailAddress}</p>
+            ) : (
+              <button
+                onClick={() => disconnect()}
+                className="text-[10px] text-muted-subtle hover:text-danger transition-colors cursor-pointer uppercase tracking-wide"
+              >
+                Disconnect
+              </button>
+            )}
           </div>
         </div>
 

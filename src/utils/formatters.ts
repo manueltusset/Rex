@@ -33,3 +33,44 @@ export function formatRelativeTime(isoDate: string): string {
 export function formatUtilization(value: number): string {
   return `${Math.round(value)}%`;
 }
+
+export function formatBillingType(raw: string | null): string {
+  if (!raw) return "--";
+  return raw.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+export function formatDate(isoDate: string | null): string {
+  if (!isoDate) return "--";
+  return new Date(isoDate).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
+
+export function formatCurrency(value: number | null): string {
+  if (value == null) return "--";
+  return `$${value.toFixed(2)}`;
+}
+
+export function formatTokenCount(value: number | null): string {
+  if (value == null) return "--";
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
+  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
+  return value.toString();
+}
+
+export function formatDuration(ms: number | null): string {
+  if (ms == null) return "--";
+  const seconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  if (hours > 0) return `${hours}h ${minutes % 60}m`;
+  if (minutes > 0) return `${minutes}m ${seconds % 60}s`;
+  return `${seconds}s`;
+}
+
+export function formatNumber(value: number | null): string {
+  if (value == null) return "--";
+  return value.toLocaleString("en-US");
+}

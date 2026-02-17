@@ -7,7 +7,9 @@ import { Toggle } from "@/components/ui/Toggle";
 import { Icon } from "@/components/ui/Icon";
 import { useConnectionStore } from "@/stores/useConnectionStore";
 import { useSettingsStore } from "@/stores/useSettingsStore";
+import { useAccountStore } from "@/stores/useAccountStore";
 import { usePlatform } from "@/hooks/usePlatform";
+import { formatBillingType, formatDate } from "@/utils/formatters";
 import { ROUTES, APP_VERSION } from "@/utils/constants";
 
 export function SettingsPage() {
@@ -15,6 +17,7 @@ export function SettingsPage() {
   const { claudeDir, useWsl, wslDistro, orgId, setClaudeDir, setUseWsl, setWslDistro, disconnect } =
     useConnectionStore();
   const { refreshInterval, setRefreshInterval, notificationsEnabled, setNotificationsEnabled, theme, setTheme } = useSettingsStore();
+  const account = useAccountStore((s) => s.account);
   const { isWindows, isWslAvailable, wslDistros } = usePlatform();
 
   const [dirInput, setDirInput] = useState(claudeDir);
@@ -57,10 +60,60 @@ export function SettingsPage() {
             Connection
           </h3>
           <div className="space-y-3 text-sm">
+            {account?.displayName && (
+              <div className="flex justify-between py-2 border-b border-border">
+                <span className="text-muted">Display Name</span>
+                <span className="text-foreground">{account.displayName}</span>
+              </div>
+            )}
+            {account?.emailAddress && (
+              <div className="flex justify-between py-2 border-b border-border">
+                <span className="text-muted">Email</span>
+                <span className="text-foreground font-mono text-xs">{account.emailAddress}</span>
+              </div>
+            )}
+            {account?.organizationName && (
+              <div className="flex justify-between py-2 border-b border-border">
+                <span className="text-muted">Organization</span>
+                <span className="text-foreground text-xs">{account.organizationName}</span>
+              </div>
+            )}
             <div className="flex justify-between py-2 border-b border-border">
               <span className="text-muted">Organization ID</span>
-              <span className="text-foreground font-mono">{orgId || "--"}</span>
+              <span className="text-foreground font-mono text-xs">{orgId || "--"}</span>
             </div>
+            {account?.organizationRole && (
+              <div className="flex justify-between py-2 border-b border-border">
+                <span className="text-muted">Role</span>
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-primary/10 text-primary border border-primary/20">
+                  {account.organizationRole}
+                </span>
+              </div>
+            )}
+            {account?.billingType && (
+              <div className="flex justify-between py-2 border-b border-border">
+                <span className="text-muted">Billing</span>
+                <span className="text-foreground text-xs">{formatBillingType(account.billingType)}</span>
+              </div>
+            )}
+            {account?.subscriptionCreatedAt && (
+              <div className="flex justify-between py-2 border-b border-border">
+                <span className="text-muted">Subscribed Since</span>
+                <span className="text-foreground font-mono text-xs">{formatDate(account.subscriptionCreatedAt)}</span>
+              </div>
+            )}
+            {account?.hasExtraUsageEnabled != null && (
+              <div className="flex justify-between py-2 border-b border-border">
+                <span className="text-muted">Extra Usage</span>
+                <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium border ${
+                  account.hasExtraUsageEnabled
+                    ? "bg-primary/10 text-primary border-primary/20"
+                    : "bg-ring-bg text-muted border-border"
+                }`}>
+                  {account.hasExtraUsageEnabled ? "Enabled" : "Disabled"}
+                </span>
+              </div>
+            )}
             <div className="flex justify-between py-2">
               <span className="text-muted">Status</span>
               <span className="text-primary-light font-mono flex items-center gap-1">

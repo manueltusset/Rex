@@ -34,7 +34,11 @@
 Rex is a native desktop app that sits alongside your [Claude Code](https://docs.anthropic.com/en/docs/claude-code) workflow. It reads local session data, connects to the Anthropic OAuth API for usage metrics, and lets you resume any conversation in a terminal with one click.
 
 <p align="center">
-  <em>TODO: Add screenshot</em>
+  <img src="docs/imgs/dashboard.png" alt="Rex Dashboard" width="800" />
+</p>
+
+<p align="center">
+  <img src="docs/imgs/popup.png" alt="Rex Tray Popup" width="300" />
 </p>
 
 ---
@@ -43,11 +47,15 @@ Rex is a native desktop app that sits alongside your [Claude Code](https://docs.
 
 | Feature | Description |
 |---------|-------------|
-| **Usage Monitoring** | Real-time visualization of 5h session, 7d rolling, and Sonnet weekly rate limits with color-coded circular progress (green/yellow/red thresholds) |
-| **Tray Popup** | Quick-access popup from the system tray with compact usage cards and one-click dashboard access |
+| **Usage Monitoring** | Real-time activity rings for 5h session, 7d rolling, Sonnet, Opus, and extra usage limits with color-coded thresholds |
+| **Activity Overview** | Daily activity chart (messages + tool calls), tokens by model over time, hourly heatmap, model cost breakdown |
+| **Account Info** | Displays account name, email, organization, billing type, and role from Claude OAuth |
+| **Project Stats** | Per-project cost, tokens, lines changed, duration, cache usage, model breakdown, and GitHub repo links |
+| **MCP Status** | Monitors configured MCP servers (stdio/http/sse) with health checks and notifications on failure |
+| **Tray Popup** | Quick-access popup from the system tray with compact activity rings and one-click dashboard access |
 | **Session Management** | Browse, search, and filter local Claude Code sessions with project context and message counts |
 | **One-Click Resume** | Resume any session directly in a native terminal window |
-| **Smart Notifications** | Desktop alerts when usage crosses 80%, 90%, or 100% thresholds (no duplicates on app start, only highest threshold fires) |
+| **Smart Notifications** | Desktop alerts when usage crosses 80%, 90%, or 100% thresholds and when MCP servers go down |
 | **Auto-Authentication** | Detects OAuth tokens from credentials file, macOS Keychain, or environment variables with automatic refresh on expiration |
 | **Theme Support** | Light, dark, and system-follow modes with full theme across dashboard and tray popup |
 | **Cross-Platform** | Native traffic lights on macOS, custom titlebar on Linux/Windows, WSL support |
@@ -67,7 +75,7 @@ Rex is a native desktop app that sits alongside your [Claude Code](https://docs.
   </tr>
 </table>
 
-**State:** Zustand 5 &nbsp;|&nbsp; **Routing:** React Router 7 &nbsp;|&nbsp; **API:** Anthropic OAuth &nbsp;|&nbsp; **Fonts:** Inter, Space Grotesk
+**State:** Zustand 5 &nbsp;|&nbsp; **Routing:** React Router 7 &nbsp;|&nbsp; **Charts:** Recharts 3 &nbsp;|&nbsp; **API:** Anthropic OAuth &nbsp;|&nbsp; **Fonts:** Inter, Space Grotesk
 
 ### Rust Crates
 
@@ -93,49 +101,64 @@ Rex is a native desktop app that sits alongside your [Claude Code](https://docs.
 src-tauri/                      Rust backend (Tauri v2)
   src/
     commands/                   Tauri IPC command handlers
+      account.rs                  Account info from ~/.claude.json
       auth.rs                     OAuth token detection
+      mcp.rs                      MCP server listing
       platform.rs                 OS/platform info
       sessions.rs                 Session listing and reading
+      stats.rs                    Project metrics and global stats
       terminal.rs                 Terminal launch for resume
       tray.rs                     System tray tooltip and icon
       usage.rs                    API usage fetching
     models/                     Data structures
+      account.rs                  OAuth account info types
+      mcp.rs                      MCP server config and status types
       session.rs                  Session metadata types
-      usage.rs                    Usage response types (5h, 7d, Sonnet)
+      stats.rs                    Project metrics, global stats, daily activity
+      usage.rs                    Usage response types (5h, 7d, Sonnet, Opus, Extra)
     services/                   Core business logic
+      account_reader.rs           Reads oauthAccount from ~/.claude.json
       anthropic_client.rs         Anthropic API client (OAuth)
       credentials.rs              Token auto-detection (file, keychain, env)
+      mcp_checker.rs              MCP server config reading and health checks
       session_parser.rs           JSONL session file parser
+      stats_reader.rs             Project stats and global stats from local files
       terminal_launcher.rs        Cross-platform terminal spawning
+      wsl.rs                      WSL integration for Windows
     lib.rs                      App entry, window/tray creation, macOS NSWindow config
 
 src/                            React frontend
   components/
     connection/                 Auth flow (ConnectionForm, DirectoryPicker)
-    dashboard/                  Dashboard widgets (UsageCard, SessionList)
+    dashboard/                  Dashboard widgets (SessionList, StatsOverview)
     layout/                     App shell (Sidebar, TitleBar, AppLayout)
-    ui/                         Reusable primitives (Card, Button, Badge, etc.)
+    ui/                         Reusable primitives (Card, Button, Badge, ActivityRings, etc.)
   hooks/
     useAutoRefresh.ts             Periodic data refresh based on settings
     useTheme.ts                   Light/dark/system theme management
     usePlatform.ts                OS and WSL detection
   pages/
-    DashboardPage.tsx             Main overview (3 usage cards + session list)
-    UsagePage.tsx                 Detailed rate limit view
-    HistoryPage.tsx               Full session history
-    ProjectsPage.tsx              Sessions grouped by project
-    SettingsPage.tsx              App configuration
+    DashboardPage.tsx             Activity rings, stats overview, MCP widget, sessions
+    UsagePage.tsx                 Detailed rate limit view with all 5 windows
+    HistoryPage.tsx               Full session history with search
+    ProjectsPage.tsx              Projects with cost, tokens, lines, model breakdown
+    McpStatusPage.tsx             MCP server status with health indicators
+    SettingsPage.tsx              App config with full account/billing details
     ConnectionPage.tsx            Initial auth setup
-    TrayPage.tsx                  Compact tray popup (3 usage cards)
+    TrayPage.tsx                  Compact tray popup with activity rings
   stores/                       Zustand state management
     useUsageStore.ts              Usage data with auto token refresh on 401
     useConnectionStore.ts         Auth credentials and token management
     useSessionStore.ts            Session listing and resume
+    useAccountStore.ts            Account info (name, email, org, billing)
+    useStatsStore.ts              Project metrics and global stats
+    useMcpStore.ts                MCP server status with change detection
     useSettingsStore.ts           Theme, refresh interval, notifications
   services/
     api.ts                        Tauri invoke wrappers
     store.ts                      Persistent storage helpers
-    notifications.ts              Threshold-based desktop notifications
+    notifications.ts              Usage threshold and MCP failure notifications
+    trayIcon.ts                   Dynamic tray icon rendering (Canvas -> RGBA)
 ```
 
 ---
@@ -205,16 +228,18 @@ If auto-detection fails, you can connect manually with your **Organization ID** 
 
 ## Usage Monitoring
 
-Rex tracks three Anthropic rate limits:
+Rex tracks up to five Anthropic rate limits via concentric activity rings:
 
 | Limit | Color | Description |
 |-------|-------|-------------|
 | **Session (5h)** | Green | 5-hour sliding window session limit |
 | **Weekly (7d)** | Purple | 7-day rolling aggregate limit |
 | **Sonnet (7d)** | Blue | 7-day Sonnet model-specific limit |
+| **Opus (7d)** | Orange | 7-day Opus model-specific limit |
+| **Extra Usage** | Pink | Extra usage allocation (if enabled) |
 
-Circular progress indicators change color at thresholds:
-- **< 80%** — Card accent color (green/purple/blue)
+Rings change color at thresholds:
+- **< 80%** — Accent color
 - **>= 80%** — Yellow (warning)
 - **>= 90%** — Red (critical)
 
