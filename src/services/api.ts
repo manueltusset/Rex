@@ -47,3 +47,7 @@ export async function getPlatformInfo(): Promise<PlatformInfo> {
 export async function detectOAuthToken(wslDistro?: string): Promise<string> {
   return invoke<string>("detect_oauth_token", { wslDistro });
 }
+
+export async function refreshOAuthToken(wslDistro?: string): Promise<string> {
+  return invoke<string>("refresh_oauth_token", { wslDistro });
+}

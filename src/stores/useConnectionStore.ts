@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { getValue, setValue, deleteValue } from "@/services/store";
-import { fetchUsage, detectOAuthToken } from "@/services/api";
+import { fetchUsage, detectOAuthToken, refreshOAuthToken } from "@/services/api";
 
 interface ConnectionState {
   orgId: string;
@@ -56,6 +56,7 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
     const { wslDistro } = get();
     const distro = wslDistro || undefined;
 
+    // 1. Detectar token
     let token: string;
     try {
       token = await detectOAuthToken(distro);
@@ -64,10 +65,22 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
       return "not_found";
     }
 
+    // 2. Validar com fetchUsage
     try {
       await fetchUsage(token);
       set({ token, isConnected: true, isLoading: false });
       await setValue("token", token);
+      return "success";
+    } catch {
+      // Token expirado - tentar refresh automatico
+    }
+
+    // 3. Tentar refresh OAuth
+    try {
+      const newToken = await refreshOAuthToken(distro);
+      await fetchUsage(newToken);
+      set({ token: newToken, isConnected: true, isLoading: false });
+      await setValue("token", newToken);
       return "success";
     } catch {
       set({ isLoading: false });
@@ -81,26 +94,36 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
     await deleteValue("token");
   },
 
-  // Re-detecta token (usuario pode ter rodado claude no terminal)
+  // Renova token: tenta OAuth refresh, depois re-deteccao como fallback
   refreshToken: async () => {
+    const { wslDistro } = get();
+    const distro = wslDistro || undefined;
+
+    // 1. Tentar refresh OAuth direto
     try {
-      const { wslDistro } = get();
-      const distro = wslDistro || undefined;
+      const newToken = await refreshOAuthToken(distro);
+      await fetchUsage(newToken);
+      set({ token: newToken, isConnected: true, error: null });
+      await setValue("token", newToken);
+      return true;
+    } catch {
+      // OAuth refresh falhou, tentar re-deteccao
+    }
 
+    // 2. Fallback: re-detectar do arquivo (usuario pode ter rodado claude)
+    try {
       const newToken = await detectOAuthToken(distro);
-      const currentToken = get().token;
-
-      if (newToken && newToken !== currentToken) {
+      if (newToken && newToken !== get().token) {
         await fetchUsage(newToken);
         set({ token: newToken, isConnected: true, error: null });
         await setValue("token", newToken);
         return true;
       }
-
-      return false;
     } catch {
-      return false;
+      // Nenhuma fonte de token disponivel
     }
+
+    return false;
   },
 
   setClaudeDir: async (dir: string) => {

@@ -111,7 +111,7 @@ export function ConnectionForm({ onSuccess }: ConnectionFormProps) {
           <Icon name="error" className="text-danger mt-0.5" />
           <div className="flex-1">
             <p className="text-xs text-foreground-secondary leading-relaxed">
-              Token found but expired. Run{" "}
+              Could not auto-refresh token. Run{" "}
               <span className="text-foreground font-mono text-[11px]">
                 claude
               </span>{" "}
