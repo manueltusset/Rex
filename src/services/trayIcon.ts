@@ -1,67 +1,61 @@
 import { invoke } from "@tauri-apps/api/core";
 
 // Canvas @2x para Retina (44px = 22pt na barra de menu)
-const ICON_SIZE = 36;
-const ICON_X = 1;
-const ICON_Y = 4;
-const CANVAS_WIDTH = 120;
 const CANVAS_HEIGHT = 44;
-const RADIUS = 17;
-const STROKE = 3;
-const TRACK_COLOR = "rgba(100, 116, 139, 0.4)";
+const CANVAS_WIDTH = 148;
 
-// Circulos posicionados apos o logo
+// Logo
+const LOGO_SIZE = 32;
+const LOGO_X = 2;
+const LOGO_Y = 6;
+
+// Circulos individuais
+const RADIUS = 15;
+const STROKE = 3;
+const CY = CANVAS_HEIGHT / 2;
 const CIRCLES = [
-  { cx: 58, cy: 22 },
-  { cx: 98, cy: 22 },
+  { cx: 54, color: "#10b981", track: "rgba(16, 185, 129, 0.25)" },   // Session
+  { cx: 88, color: "#a78bfa", track: "rgba(167, 139, 250, 0.25)" },  // Weekly
+  { cx: 122, color: "#60a5fa", track: "rgba(96, 165, 250, 0.25)" },  // Sonnet
 ];
 
-function arcColor(pct: number): string {
+function effectiveColor(pct: number, baseColor: string): string {
   if (pct >= 90) return "#ef4444";
   if (pct >= 80) return "#f59e0b";
-  if (pct >= 60) return "#34d399";
-  return "#10b981";
-}
-
-function drawArc(
-  ctx: CanvasRenderingContext2D,
-  cx: number,
-  cy: number,
-  radius: number,
-  startAngle: number,
-  endAngle: number,
-  color: string,
-  lineWidth: number,
-) {
-  ctx.beginPath();
-  ctx.arc(cx, cy, radius, startAngle, endAngle, false);
-  ctx.strokeStyle = color;
-  ctx.lineWidth = lineWidth;
-  ctx.lineCap = "round";
-  ctx.stroke();
+  return baseColor;
 }
 
 function drawCircleProgress(
   ctx: CanvasRenderingContext2D,
   cx: number,
-  cy: number,
   pct: number,
+  config: typeof CIRCLES[0],
 ) {
   // Track
-  drawArc(ctx, cx, cy, RADIUS, 0, Math.PI * 2, TRACK_COLOR, STROKE);
+  ctx.beginPath();
+  ctx.arc(cx, CY, RADIUS, 0, Math.PI * 2);
+  ctx.strokeStyle = config.track;
+  ctx.lineWidth = STROKE;
+  ctx.lineCap = "round";
+  ctx.stroke();
 
-  // Arco de progresso (comeca do topo: -PI/2)
+  // Arco de progresso
   if (pct > 0) {
-    const endAngle = -Math.PI / 2 + (pct / 100) * Math.PI * 2;
-    drawArc(ctx, cx, cy, RADIUS, -Math.PI / 2, endAngle, arcColor(pct), STROKE);
+    const endAngle = -Math.PI / 2 + (Math.min(pct, 100) / 100) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.arc(cx, CY, RADIUS, -Math.PI / 2, endAngle, false);
+    ctx.strokeStyle = effectiveColor(pct, config.color);
+    ctx.lineWidth = STROKE;
+    ctx.lineCap = "round";
+    ctx.stroke();
   }
 
-  // Texto (numero sem %)
+  // Texto percentual
   ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 13px system-ui, -apple-system, sans-serif";
+  ctx.font = "bold 11px system-ui, -apple-system, sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText(String(Math.round(pct)), cx, cy + 1);
+  ctx.fillText(String(Math.round(pct)), cx, CY + 1);
 }
 
 function loadImage(src: string): Promise<HTMLImageElement> {
@@ -73,10 +67,17 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
+// Cache para evitar re-rendering desnecessario
+let lastKey = "";
+
 export async function renderTrayIcon(
   fiveHour: number,
   sevenDay: number,
+  sonnet: number,
 ): Promise<void> {
+  const key = `${Math.round(fiveHour)}_${Math.round(sevenDay)}_${Math.round(sonnet)}`;
+  if (key === lastKey) return;
+
   try {
     const canvas = document.createElement("canvas");
     canvas.width = CANVAS_WIDTH;
@@ -84,22 +85,22 @@ export async function renderTrayIcon(
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Fundo transparente
     ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-    // Desenha logo do Rex
+    // Logo do Rex
     try {
       const logo = await loadImage("/rex-logo.png");
-      ctx.drawImage(logo, ICON_X, ICON_Y, ICON_SIZE, ICON_SIZE);
+      ctx.drawImage(logo, LOGO_X, LOGO_Y, LOGO_SIZE, LOGO_SIZE);
     } catch {
-      // Logo nao disponivel, continua sem ele
+      // Logo nao disponivel
     }
 
-    // Desenha os dois circulos de progresso
-    drawCircleProgress(ctx, CIRCLES[0].cx, CIRCLES[0].cy, fiveHour);
-    drawCircleProgress(ctx, CIRCLES[1].cx, CIRCLES[1].cy, sevenDay);
+    // 3 circulos de progresso com % dentro
+    const values = [fiveHour, sevenDay, sonnet];
+    CIRCLES.forEach((circle, i) => {
+      drawCircleProgress(ctx, circle.cx, values[i], circle);
+    });
 
-    // Extrai pixels RGBA
     const imageData = ctx.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     const rgba = Array.from(imageData.data);
 
@@ -108,6 +109,8 @@ export async function renderTrayIcon(
       width: CANVAS_WIDTH,
       height: CANVAS_HEIGHT,
     });
+
+    lastKey = key;
   } catch {
     // Fallback silencioso
   }

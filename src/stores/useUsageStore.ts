@@ -2,6 +2,8 @@ import { create } from "zustand";
 import { invoke } from "@tauri-apps/api/core";
 import { fetchUsage } from "@/services/api";
 import { checkAndNotify } from "@/services/notifications";
+import { renderTrayIcon } from "@/services/trayIcon";
+import { isMacOS } from "@/lib/platform";
 import { setValue, deleteValue } from "@/services/store";
 import { useConnectionStore } from "./useConnectionStore";
 import type { UsageWindow } from "@/types/usage";
@@ -55,6 +57,7 @@ export const useUsageStore = create<UsageState>((set) => ({
         // Token nao renovado ou retry falhou - preserva config
         useConnectionStore.setState({ token: "", isConnected: false });
         await deleteValue("token");
+        invoke("clear_tray_display").catch(() => {});
         set({ isLoading: false, error: "Token expired. Run 'claude' in your terminal to refresh." });
         return;
       }
@@ -94,9 +97,20 @@ function handleSuccess(
     checkAndNotify("sonnetWeekly", data.seven_day_sonnet.utilization, "Sonnet 7d").catch(() => {});
   }
 
-  // Atualizar tray tooltip
+  // Atualizar tray tooltip + title + icone
+  const sonnetUtil = data.seven_day_sonnet?.utilization ?? 0;
   invoke("update_tray_tooltip", {
     fiveHour: data.five_hour.utilization,
     sevenDay: data.seven_day.utilization,
+    sonnet: sonnetUtil,
   }).catch(() => {});
+
+  // Icone dinamico apenas no macOS (Windows/Linux usa icone padrao)
+  if (isMacOS()) {
+    renderTrayIcon(
+      data.five_hour.utilization,
+      data.seven_day.utilization,
+      sonnetUtil,
+    ).catch(() => {});
+  }
 }

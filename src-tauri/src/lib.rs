@@ -6,7 +6,7 @@ use commands::auth::{detect_oauth_token, refresh_oauth_token};
 use commands::platform::get_platform_info;
 use commands::sessions::{list_sessions, read_session, search_sessions};
 use commands::terminal::resume_session;
-use commands::tray::{exit_app, update_tray_icon, update_tray_tooltip};
+use commands::tray::{clear_tray_display, exit_app, update_tray_icon, update_tray_tooltip};
 use commands::usage::fetch_usage;
 
 use tauri::Manager;
@@ -92,6 +92,7 @@ pub fn run() {
             update_tray_tooltip,
             exit_app,
             update_tray_icon,
+            clear_tray_display,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -118,7 +119,7 @@ fn toggle_tray_popup(app: &tauri::AppHandle) {
         tauri::WebviewUrl::App("/tray".into()),
     )
     .title("")
-    .inner_size(360.0, 460.0)
+    .inner_size(360.0, 390.0)
     .resizable(false)
     .decorations(false)
     .always_on_top(true)
