@@ -87,3 +87,35 @@ export async function checkAndNotify(
     });
   }
 }
+
+// --- MCP Status Notifications ---
+
+let mcpInitialized = false;
+
+export async function notifyMcpStatusChange(
+  serverName: string,
+  errorMessage?: string,
+): Promise<void> {
+  const { notificationsEnabled } = useSettingsStore.getState();
+  if (!notificationsEnabled) return;
+
+  // Nao notifica no primeiro fetch
+  if (!mcpInitialized) {
+    mcpInitialized = true;
+    return;
+  }
+
+  let permitted = await isPermissionGranted();
+  if (!permitted) {
+    const result = await requestPermission();
+    permitted = result === "granted";
+  }
+  if (!permitted) return;
+
+  sendNotification({
+    title: "Rex - MCP Server Down",
+    body: errorMessage
+      ? `${serverName}: ${errorMessage}`
+      : `${serverName} is no longer reachable`,
+  });
+}
