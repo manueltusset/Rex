@@ -329,7 +329,29 @@ async fn read_macos_keychain_raw() -> Option<String> {
         return None;
     }
 
-    Some(raw)
+    // Keychain pode retornar hex-encoded quando o valor contem dados binarios
+    if raw.starts_with('{') {
+        Some(raw)
+    } else if let Some(decoded) = try_hex_decode(&raw) {
+        Some(decoded)
+    } else {
+        Some(raw)
+    }
+}
+
+/// Tenta decodificar uma string hexadecimal para UTF-8
+fn try_hex_decode(hex: &str) -> Option<String> {
+    let bytes: Vec<u8> = (0..hex.len())
+        .step_by(2)
+        .map(|i| u8::from_str_radix(&hex[i..i + 2], 16))
+        .collect::<Result<Vec<_>, _>>()
+        .ok()?;
+    let text = String::from_utf8(bytes).ok()?;
+    if text.contains("claudeAiOauth") {
+        Some(text)
+    } else {
+        None
+    }
 }
 
 /// Atualiza credenciais no macOS Keychain (best-effort)
