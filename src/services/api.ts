@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import type { UsageResponse } from "@/types/usage";
-import type { SessionMeta, SessionEntry, PlatformInfo } from "@/types/session";
+import type { SessionMeta, SessionEntry, SearchMatch, PlatformInfo } from "@/types/session";
 
 export async function fetchUsage(token: string): Promise<UsageResponse> {
   return invoke<UsageResponse>("fetch_usage", { token });
@@ -20,6 +20,15 @@ export async function readSession(
   wslDistro?: string,
 ): Promise<SessionEntry[]> {
   return invoke<SessionEntry[]>("read_session", { sessionPath, useWsl, wslDistro });
+}
+
+export async function searchSessions(
+  claudeDir: string,
+  query: string,
+  useWsl?: boolean,
+  wslDistro?: string,
+): Promise<SearchMatch[]> {
+  return invoke<SearchMatch[]>("search_sessions", { claudeDir, query, useWsl, wslDistro });
 }
 
 export async function resumeSession(

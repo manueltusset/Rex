@@ -20,6 +20,14 @@ pub struct SessionEntry {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct SearchMatch {
+    pub session: SessionMeta,
+    pub matched_text: String,
+    pub entry_type: String,
+    pub match_count: u32,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct PlatformInfo {
     pub os: String,
     pub is_wsl_available: bool,

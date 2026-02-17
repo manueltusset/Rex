@@ -1,4 +1,4 @@
-use crate::models::session::{SessionEntry, SessionMeta};
+use crate::models::session::{SearchMatch, SessionEntry, SessionMeta};
 use crate::services::session_parser;
 
 #[tauri::command]
@@ -19,6 +19,20 @@ pub async fn read_session(
 ) -> Result<Vec<SessionEntry>, String> {
     let path = resolve_path(&session_path, use_wsl.unwrap_or(false), wsl_distro.as_deref());
     session_parser::parse_session_file(&path).await
+}
+
+#[tauri::command]
+pub async fn search_sessions(
+    claude_dir: String,
+    query: String,
+    use_wsl: Option<bool>,
+    wsl_distro: Option<String>,
+) -> Result<Vec<SearchMatch>, String> {
+    if query.len() < 2 {
+        return Ok(Vec::new());
+    }
+    let dir = resolve_path(&claude_dir, use_wsl.unwrap_or(false), wsl_distro.as_deref());
+    session_parser::search_in_sessions(&dir, &query).await
 }
 
 /// Converte path Linux para UNC Windows quando WSL mode ativo

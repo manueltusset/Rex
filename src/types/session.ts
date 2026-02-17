@@ -8,9 +8,16 @@ export interface SessionMeta {
 }
 
 export interface SessionEntry {
-  entry_type: string;
+  type: string;
   message: Record<string, unknown>;
   timestamp: string;
+}
+
+export interface SearchMatch {
+  session: SessionMeta;
+  matched_text: string;
+  entry_type: string;
+  match_count: number;
 }
 
 export interface PlatformInfo {
