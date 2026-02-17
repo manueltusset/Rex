@@ -41,7 +41,7 @@ export function DashboardPage() {
       </header>
 
       {/* Cards de uso - 3 colunas */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         {fiveHour ? (
           <UsageCard
             title="Session Limit (5h)"

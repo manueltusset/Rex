@@ -5,7 +5,7 @@ import { useUsageStore } from "@/stores/useUsageStore";
 import { useConnectionStore } from "@/stores/useConnectionStore";
 import { useSettingsStore } from "@/stores/useSettingsStore";
 import { useTheme } from "@/hooks/useTheme";
-import { CircularProgress } from "@/components/ui/CircularProgress";
+import { ActivityRings } from "@/components/ui/ActivityRings";
 import { Spinner } from "@/components/ui/Spinner";
 import { formatTimeUntil } from "@/utils/formatters";
 import { getValue } from "@/services/store";
@@ -20,47 +20,51 @@ interface UsageCache {
   cachedAt: number;
 }
 
-interface TrayCardProps {
-  label: string;
-  data: UsageWindow | null;
-  colorClass: string;
+// Cor com threshold: amarelo >=80%, vermelho >=90%
+function legendColor(value: number, base: string): string {
+  if (value >= 90) return "#ef4444";
+  if (value >= 80) return "#f59e0b";
+  return base;
 }
 
-function TrayCard({ label, data, colorClass }: TrayCardProps) {
+function LegendRow({
+  color,
+  label,
+  data,
+}: {
+  color: string;
+  label: string;
+  data: UsageWindow | null;
+}) {
   const used = data ? Math.round(data.utilization) : 0;
-
-  // Cor do circulo: cor fixa do card, mas muda para amarelo/vermelho em thresholds altos
-  const effectiveColor =
-    used >= 90 ? "text-danger" : used >= 80 ? "text-rex-accent" : colorClass;
+  const dotColor = data ? legendColor(used, color) : color;
 
   if (!data) {
     return (
-      <div className="bg-card rounded-xl p-4 border border-border opacity-50">
-        <p className="text-[10px] text-muted-subtle uppercase tracking-wider font-medium">{label}</p>
-        <p className="text-sm text-muted-subtle mt-1">No data</p>
+      <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-surface/50 opacity-50">
+        <span
+          className="w-2.5 h-2.5 rounded-full shrink-0"
+          style={{ backgroundColor: color }}
+        />
+        <span className="text-xs text-muted-subtle flex-1">{label}</span>
+        <span className="text-xs text-muted-subtle">--</span>
       </div>
     );
   }
 
   return (
-    <div className="bg-card rounded-xl p-4 border border-border hover:border-border-subtle transition-colors">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-[10px] text-muted-subtle uppercase tracking-wider font-medium mb-1.5">
-            {label}
-          </p>
-          <p className="text-2xl font-bold font-display leading-none">{used}%</p>
-          <p className="text-[11px] text-muted-subtle mt-1.5">
-            {data.resets_at ? `Resets ${formatTimeUntil(data.resets_at)}` : "--"}
-          </p>
-        </div>
-        <CircularProgress
-          value={used}
-          size={56}
-          strokeWidth={2.5}
-          colorClass={effectiveColor}
-        />
-      </div>
+    <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-surface/50">
+      <span
+        className="w-2.5 h-2.5 rounded-full shrink-0"
+        style={{ backgroundColor: dotColor }}
+      />
+      <span className="text-xs text-muted flex-1">{label}</span>
+      <span className="text-xs font-bold text-foreground w-10 text-right">
+        {used}%
+      </span>
+      <span className="text-[10px] text-muted-subtle w-20 text-right">
+        {data.resets_at ? formatTimeUntil(data.resets_at) : "--"}
+      </span>
     </div>
   );
 }
@@ -73,7 +77,6 @@ export function TrayPage() {
 
   useTheme();
 
-  // Carrega cache do store compartilhado
   const loadCache = async () => {
     try {
       const cache = await getValue<UsageCache>("usageCache");
@@ -90,7 +93,6 @@ export function TrayPage() {
     }
   };
 
-  // Init: carrega store, cache e faz fetch
   useEffect(() => {
     Promise.all([loadFromStore(), loadSettings()]).then(async () => {
       await loadCache();
@@ -99,7 +101,6 @@ export function TrayPage() {
     });
   }, []);
 
-  // Refresh ao reabrir popup (show/hide reutiliza a mesma janela)
   useEffect(() => {
     const unlisten = appWindow.onFocusChanged(({ payload: focused }) => {
       if (focused) {
@@ -134,11 +135,25 @@ export function TrayPage() {
     );
   }
 
+  // Maior utilizacao para o texto central
+  const values = [
+    fiveHour?.utilization ?? 0,
+    sevenDay?.utilization ?? 0,
+    sonnetWeekly?.utilization ?? 0,
+  ];
+  const maxUsage = Math.round(Math.max(...values));
+
+  const rings = [
+    { value: fiveHour?.utilization ?? 0, color: "#10b981" },
+    { value: sevenDay?.utilization ?? 0, color: "#a78bfa" },
+    { value: sonnetWeekly?.utilization ?? 0, color: "#60a5fa" },
+  ];
+
   return (
     <div className="h-screen p-1.5 select-none">
     <div className="p-4 bg-bg text-foreground h-full overflow-hidden flex flex-col rounded-2xl">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2.5">
           <img src="/rex-logo.png" alt="Rex" className="w-7 h-7" />
           <span className="text-base font-bold font-display">Rex</span>
@@ -159,15 +174,27 @@ export function TrayPage() {
         </div>
       </div>
 
-      {/* Cards */}
-      <div className="flex-1 space-y-2.5">
-        <TrayCard label="Session (5h)" data={fiveHour} colorClass="text-usage-session" />
-        <TrayCard label="Weekly (7d)" data={sevenDay} colorClass="text-usage-weekly" />
-        <TrayCard label="Sonnet (7d)" data={sonnetWeekly} colorClass="text-usage-sonnet" />
+      {/* Activity Rings */}
+      <div className="flex items-center justify-center py-4">
+        <ActivityRings
+          rings={rings}
+          size={130}
+          strokeWidth={10}
+          gap={4}
+          showCenter
+          centerText={`${maxUsage}%`}
+        />
+      </div>
+
+      {/* Legenda */}
+      <div className="flex-1 space-y-1.5">
+        <LegendRow color="#10b981" label="Session (5h)" data={fiveHour} />
+        <LegendRow color="#a78bfa" label="Weekly (7d)" data={sevenDay} />
+        <LegendRow color="#60a5fa" label="Sonnet (7d)" data={sonnetWeekly} />
       </div>
 
       {/* Footer */}
-      <div className="pt-2.5 mt-2.5 border-t border-border-subtle text-center">
+      <div className="pt-2 mt-2 border-t border-border-subtle text-center">
         <p className="text-[10px] text-muted-subtle font-mono">
           Rex Companion
         </p>

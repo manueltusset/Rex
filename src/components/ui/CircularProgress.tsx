@@ -8,7 +8,7 @@ interface CircularProgressProps {
 export function CircularProgress({
   value,
   size = 64,
-  strokeWidth = 4,
+  strokeWidth = 6,
   colorClass = "text-primary",
 }: CircularProgressProps) {
   const radius = (size - strokeWidth) / 2;
@@ -30,6 +30,7 @@ export function CircularProgress({
           fill="transparent"
           stroke="currentColor"
           strokeWidth={strokeWidth}
+          strokeLinecap="round"
         />
         <circle
           className={colorClass}

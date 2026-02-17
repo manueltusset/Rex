@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { invoke } from "@tauri-apps/api/core";
 import { getValue, setValue, deleteValue } from "@/services/store";
 import { fetchUsage, detectOAuthToken, refreshOAuthToken } from "@/services/api";
 
@@ -92,6 +93,7 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
     set({ orgId: "", token: "", isConnected: false });
     await deleteValue("orgId");
     await deleteValue("token");
+    invoke("clear_tray_display").catch(() => {});
   },
 
   // Renova token: tenta OAuth refresh, depois re-deteccao como fallback
