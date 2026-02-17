@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { getValue, setValue, deleteValue } from "@/services/store";
-import { fetchUsage, detectOAuthToken, cliRefreshToken } from "@/services/api";
+import { fetchUsage, detectOAuthToken } from "@/services/api";
 
 interface ConnectionState {
   orgId: string;
@@ -53,7 +53,7 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
   autoConnect: async () => {
     set({ isLoading: true, error: null });
 
-    const { useWsl, wslDistro } = get();
+    const { wslDistro } = get();
     const distro = wslDistro || undefined;
 
     let token: string;
@@ -70,59 +70,30 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
       await setValue("token", token);
       return "success";
     } catch {
-      // Token expirado - tenta refresh via Claude CLI
-      try {
-        const refreshed = await cliRefreshToken(useWsl, distro);
-        await fetchUsage(refreshed);
-        set({ token: refreshed, isConnected: true, isLoading: false });
-        await setValue("token", refreshed);
-        return "success";
-      } catch {
-        set({ isLoading: false });
-        return "expired";
-      }
+      set({ isLoading: false });
+      return "expired";
     }
   },
 
   disconnect: async () => {
-    set({
-      orgId: "",
-      token: "",
-      isConnected: false,
-      claudeDir: "",
-      useWsl: false,
-      wslDistro: "",
-    });
+    set({ orgId: "", token: "", isConnected: false });
     await deleteValue("orgId");
     await deleteValue("token");
-    await deleteValue("claudeDir");
-    await deleteValue("useWsl");
-    await deleteValue("wslDistro");
   },
 
-  // Re-detecta token ou invoca CLI para renovar
+  // Re-detecta token (usuario pode ter rodado claude no terminal)
   refreshToken: async () => {
     try {
-      const { useWsl, wslDistro } = get();
+      const { wslDistro } = get();
       const distro = wslDistro || undefined;
 
-      // Tenta re-ler (CLI pode ter renovado em outro terminal)
       const newToken = await detectOAuthToken(distro);
       const currentToken = get().token;
 
       if (newToken && newToken !== currentToken) {
         await fetchUsage(newToken);
-        set({ token: newToken, error: null });
+        set({ token: newToken, isConnected: true, error: null });
         await setValue("token", newToken);
-        return true;
-      }
-
-      // Mesmo token - tenta refresh via CLI
-      const refreshed = await cliRefreshToken(useWsl, distro);
-      if (refreshed && refreshed !== currentToken) {
-        await fetchUsage(refreshed);
-        set({ token: refreshed, error: null });
-        await setValue("token", refreshed);
         return true;
       }
 

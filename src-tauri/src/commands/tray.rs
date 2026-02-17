@@ -35,3 +35,8 @@ pub async fn update_tray_icon(
     }
     Ok(())
 }
+
+#[tauri::command]
+pub fn exit_app(app: AppHandle) {
+    app.exit(0);
+}

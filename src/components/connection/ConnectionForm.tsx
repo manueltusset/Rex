@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
@@ -30,8 +30,9 @@ export function ConnectionForm({ onSuccess }: ConnectionFormProps) {
   const [showToken, setShowToken] = useState(false);
   const [autoDetecting, setAutoDetecting] = useState(true);
   const [autoResult, setAutoResult] = useState<"not_found" | "expired" | null>(null);
+  const pollingRef = useRef(false);
 
-  // Tenta auto-detectar o token ao montar
+  // Auto-detectar token ao montar
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -49,6 +50,26 @@ export function ConnectionForm({ onSuccess }: ConnectionFormProps) {
     };
   }, []);
 
+  // Polling: re-verifica credenciais a cada 5s enquanto token expirado
+  useEffect(() => {
+    if (autoResult !== "expired") return;
+    pollingRef.current = true;
+
+    const interval = setInterval(async () => {
+      if (!pollingRef.current) return;
+      const result = await autoConnect();
+      if (result === "success") {
+        pollingRef.current = false;
+        onSuccess();
+      }
+    }, 5000);
+
+    return () => {
+      pollingRef.current = false;
+      clearInterval(interval);
+    };
+  }, [autoResult, autoConnect, onSuccess]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!token.trim()) return;
@@ -57,6 +78,18 @@ export function ConnectionForm({ onSuccess }: ConnectionFormProps) {
       onSuccess();
     } catch {
       // Erro ja tratado no store
+    }
+  };
+
+  const handleRetry = async () => {
+    setAutoDetecting(true);
+    setAutoResult(null);
+    const result = await autoConnect();
+    if (result === "success") {
+      onSuccess();
+    } else {
+      setAutoDetecting(false);
+      setAutoResult(result);
     }
   };
 
@@ -76,13 +109,27 @@ export function ConnectionForm({ onSuccess }: ConnectionFormProps) {
       {autoResult === "expired" && (
         <div className="flex items-start gap-3 p-3 bg-danger/10 rounded-lg border border-danger/20">
           <Icon name="error" className="text-danger mt-0.5" />
-          <p className="text-xs text-foreground-secondary leading-relaxed">
-            Token found but expired. Run{" "}
-            <span className="text-foreground font-mono text-[11px]">
-              claude
-            </span>{" "}
-            in your terminal to re-authenticate, then reopen Rex.
-          </p>
+          <div className="flex-1">
+            <p className="text-xs text-foreground-secondary leading-relaxed">
+              Token found but expired. Run{" "}
+              <span className="text-foreground font-mono text-[11px]">
+                claude
+              </span>{" "}
+              in your terminal to refresh it.
+            </p>
+            <div className="flex items-center gap-3 mt-2">
+              <button
+                type="button"
+                onClick={handleRetry}
+                className="px-3 py-1.5 text-xs font-medium text-primary border border-primary/30 rounded-lg hover:bg-primary/10 transition-colors cursor-pointer"
+              >
+                Retry Detection
+              </button>
+              <span className="text-[10px] text-muted-subtle">
+                Auto-checking every 5s...
+              </span>
+            </div>
+          </div>
         </div>
       )}
 

@@ -13,37 +13,6 @@ struct OAuthData {
     access_token: String,
 }
 
-/// Invoca o Claude CLI para acionar o refresh interno do token
-pub async fn try_cli_refresh(use_wsl: bool, wsl_distro: Option<&str>) -> Result<String, String> {
-    let result = if cfg!(target_os = "windows") && use_wsl {
-        // Windows + WSL: claude esta dentro do WSL
-        let mut cmd = tokio::process::Command::new("wsl.exe");
-        if let Some(d) = wsl_distro {
-            cmd.args(["-d", d]);
-        }
-        cmd.args(["--", "claude", "auth", "status"])
-            .stdout(std::process::Stdio::piped())
-            .stderr(std::process::Stdio::piped())
-            .output()
-            .await
-    } else {
-        // macOS / Linux / Windows nativo: claude esta no PATH
-        tokio::process::Command::new("claude")
-            .args(["auth", "status"])
-            .stdout(std::process::Stdio::piped())
-            .stderr(std::process::Stdio::piped())
-            .output()
-            .await
-    };
-
-    if result.is_err() {
-        return Err("Claude CLI not found. Install it or re-authenticate manually.".to_string());
-    }
-
-    // Re-le credenciais (CLI pode ter renovado o token)
-    detect_oauth_token(wsl_distro).await
-}
-
 /// Tenta detectar o OAuth token automaticamente
 pub async fn detect_oauth_token(wsl_distro: Option<&str>) -> Result<String, String> {
     // 1. Variavel de ambiente

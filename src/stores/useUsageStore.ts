@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { invoke } from "@tauri-apps/api/core";
 import { fetchUsage } from "@/services/api";
 import { checkAndNotify } from "@/services/notifications";
-import { setValue } from "@/services/store";
+import { setValue, deleteValue } from "@/services/store";
 import { useConnectionStore } from "./useConnectionStore";
 import type { UsageWindow } from "@/types/usage";
 
@@ -52,9 +52,10 @@ export const useUsageStore = create<UsageState>((set) => ({
             // Refresh falhou, desconectar
           }
         }
-        // Token nao renovado ou retry falhou
-        await useConnectionStore.getState().disconnect();
-        set({ isLoading: false, error: "Token expired. Please reconnect." });
+        // Token nao renovado ou retry falhou - preserva config
+        useConnectionStore.setState({ token: "", isConnected: false });
+        await deleteValue("token");
+        set({ isLoading: false, error: "Token expired. Run 'claude' in your terminal to refresh." });
         return;
       }
 
