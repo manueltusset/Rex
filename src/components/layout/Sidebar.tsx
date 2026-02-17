@@ -33,7 +33,7 @@ export function Sidebar() {
               Rex
             </h1>
             <span className="text-[10px] text-muted-subtle font-medium tracking-[0.2em] uppercase mt-0.5 block">
-              Companion
+              Dashboard
             </span>
           </div>
         </div>

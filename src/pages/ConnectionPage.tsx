@@ -82,7 +82,7 @@ export function ConnectionPage() {
 
           <div className="mt-8 text-center">
             <p className="text-xs text-muted-subtle font-mono">
-              Rex Companion App v{APP_VERSION}
+              Rex v{APP_VERSION}
             </p>
           </div>
         </div>

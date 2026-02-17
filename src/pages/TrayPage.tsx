@@ -79,6 +79,20 @@ export function TrayPage() {
 
   useTheme();
 
+  const isMac = navigator.platform.startsWith("Mac");
+
+  // Fundo transparente para vibrancy nativa (somente macOS)
+  useEffect(() => {
+    if (isMac) {
+      document.body.style.background = "transparent";
+      document.documentElement.style.background = "transparent";
+    }
+    return () => {
+      document.body.style.background = "";
+      document.documentElement.style.background = "";
+    };
+  }, [isMac]);
+
   const loadCache = async () => {
     try {
       const cache = await getValue<UsageCache>("usageCache");
@@ -131,8 +145,8 @@ export function TrayPage() {
 
   if (!ready || (isLoading && !fiveHour)) {
     return (
-      <div className="h-screen p-1.5">
-        <div className="flex items-center justify-center h-full bg-bg rounded-2xl">
+      <div className={`h-screen ${isMac ? "" : "p-1.5"}`}>
+        <div className={`flex items-center justify-center h-full ${isMac ? "" : "bg-bg rounded-2xl"}`}>
           <Spinner />
         </div>
       </div>
@@ -151,8 +165,8 @@ export function TrayPage() {
   }
 
   return (
-    <div className="h-screen p-1.5 select-none">
-    <div className="p-4 bg-bg text-foreground h-full overflow-hidden flex flex-col rounded-2xl">
+    <div className={`h-screen select-none ${isMac ? "" : "p-1.5"}`}>
+    <div className={`p-4 text-foreground h-full overflow-hidden flex flex-col ${isMac ? "" : "bg-bg rounded-2xl"}`}>
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2.5">
@@ -205,7 +219,7 @@ export function TrayPage() {
       {/* Footer */}
       <div className="pt-2 mt-2 border-t border-border-subtle text-center">
         <p className="text-[10px] text-muted-subtle font-mono">
-          Rex Companion
+          Rex Dashboard
         </p>
       </div>
     </div>
