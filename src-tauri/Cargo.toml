@@ -1,7 +1,7 @@
 [package]
 name = "rex"
 version = "0.1.0"
-description = "Rex - Claude Code Dashboard Companion"
+description = "Rex - Claude Code Dashboard"
 authors = ["you"]
 edition = "2021"
 
@@ -13,7 +13,7 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-tauri = { version = "2", features = [] }
+tauri = { version = "2", features = ["macos-private-api"] }
 tauri-plugin-store = "2"
 tauri-plugin-shell = "2"
 tauri-plugin-dialog = "2"
@@ -31,3 +31,4 @@ thiserror = "2"
 objc2-app-kit = { version = "0.3", features = ["NSColor", "NSWindow", "NSResponder", "NSView", "objc2-quartz-core"] }
 objc2-quartz-core = { version = "0.3", features = ["CALayer"] }
 raw-window-handle = "0.6"
+window-vibrancy = "0.7"

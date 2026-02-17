@@ -120,20 +120,31 @@ fn toggle_tray_popup(app: &tauri::AppHandle) {
     }
 
     // Criar popup pela primeira vez
-    let popup = tauri::WebviewWindowBuilder::new(
+    let mut popup_builder = tauri::WebviewWindowBuilder::new(
         app,
         "tray-popup",
         tauri::WebviewUrl::App("/tray".into()),
     )
     .title("")
-    .inner_size(360.0, 390.0)
+    .inner_size(360.0, 420.0)
     .resizable(false)
     .decorations(false)
     .always_on_top(true)
     .skip_taskbar(true)
-    .visible(false)
-    .background_color(tauri::window::Color(0, 0, 0, 255))
-    .build();
+    .visible(false);
+
+    #[cfg(target_os = "macos")]
+    {
+        popup_builder = popup_builder.transparent(true);
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    {
+        popup_builder =
+            popup_builder.background_color(tauri::window::Color(13, 15, 18, 255));
+    }
+
+    let popup = popup_builder.build();
 
     if let Ok(popup) = popup {
         #[cfg(target_os = "macos")]
@@ -155,37 +166,10 @@ fn toggle_tray_popup(app: &tauri::AppHandle) {
 
 #[cfg(target_os = "macos")]
 fn set_macos_popup_rounded(popup: &tauri::WebviewWindow) {
-    use objc2_app_kit::NSColor;
-    use raw_window_handle::{HasWindowHandle, RawWindowHandle};
+    use window_vibrancy::{apply_vibrancy, NSVisualEffectMaterial};
 
-    let Ok(handle) = popup.window_handle() else {
-        return;
-    };
-
-    let RawWindowHandle::AppKit(appkit) = handle.as_raw() else {
-        return;
-    };
-
-    unsafe {
-        let ns_view = appkit.ns_view.as_ptr() as *const objc2_app_kit::NSView;
-        let ns_view = &*ns_view;
-        let Some(ns_window) = ns_view.window() else {
-            return;
-        };
-
-        // Fundo preto para contraste com bordas arredondadas do conteudo
-        let bg = NSColor::colorWithSRGBRed_green_blue_alpha(0.0, 0.0, 0.0, 1.0);
-        ns_window.setBackgroundColor(Some(&bg));
-
-        // Bordas arredondadas via CALayer no contentView
-        if let Some(content_view) = ns_window.contentView() {
-            content_view.setWantsLayer(true);
-            if let Some(layer) = content_view.layer() {
-                layer.setCornerRadius(12.0);
-                layer.setMasksToBounds(true);
-            }
-        }
-    }
+    // Vibrancy nativa com material HudWindow e bordas arredondadas
+    let _ = apply_vibrancy(popup, NSVisualEffectMaterial::HudWindow, None, Some(16.0));
 }
 
 #[cfg(target_os = "macos")]
