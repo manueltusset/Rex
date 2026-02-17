@@ -81,6 +81,8 @@
   --color-usage-session: #10b981;
   --color-usage-weekly: #a78bfa;
   --color-usage-sonnet: #60a5fa;
+  --color-usage-opus: #fb923c;
+  --color-usage-extra: #f472b6;
 
   /* Aliases para compatibilidade durante migracao */
   --color-bg-dark: var(--bg);

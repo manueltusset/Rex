@@ -6,16 +6,27 @@ pub async fn update_tray_tooltip(
     five_hour: f64,
     seven_day: f64,
     sonnet: f64,
+    opus: f64,
+    extra: f64,
 ) -> Result<(), String> {
     if let Some(tray) = app.tray_by_id("main-tray") {
-        let tooltip = format!(
-            "Rex - 5h: {:.0}% | 7d: {:.0}% | Sonnet: {:.0}%",
-            five_hour, seven_day, sonnet
-        );
+        let mut parts = vec![
+            format!("5h: {:.0}%", five_hour),
+            format!("7d: {:.0}%", seven_day),
+        ];
+        if sonnet > 0.0 {
+            parts.push(format!("Sonnet: {:.0}%", sonnet));
+        }
+        if opus > 0.0 {
+            parts.push(format!("Opus: {:.0}%", opus));
+        }
+        if extra > 0.0 {
+            parts.push(format!("Extra: {:.0}%", extra));
+        }
+        let tooltip = format!("Rex - {}", parts.join(" | "));
         tray.set_tooltip(Some(&tooltip))
             .map_err(|e| e.to_string())?;
 
-        // Limpa titulo para nao mostrar texto ao lado do icone
         #[cfg(not(target_os = "windows"))]
         {
             tray.set_title(Some(""))

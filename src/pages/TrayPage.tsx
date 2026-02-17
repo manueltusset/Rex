@@ -9,7 +9,7 @@ import { ActivityRings } from "@/components/ui/ActivityRings";
 import { Spinner } from "@/components/ui/Spinner";
 import { formatTimeUntil } from "@/utils/formatters";
 import { getValue } from "@/services/store";
-import type { UsageWindow } from "@/types/usage";
+import type { UsageWindow, ExtraUsage } from "@/types/usage";
 
 const appWindow = getCurrentWindow();
 
@@ -17,6 +17,8 @@ interface UsageCache {
   fiveHour: UsageWindow;
   sevenDay: UsageWindow;
   sonnetWeekly: UsageWindow | null;
+  opusWeekly: UsageWindow | null;
+  extraUsage: ExtraUsage | null;
   cachedAt: number;
 }
 
@@ -70,7 +72,7 @@ function LegendRow({
 }
 
 export function TrayPage() {
-  const { fiveHour, sevenDay, sonnetWeekly, fetch, isLoading } = useUsageStore();
+  const { fiveHour, sevenDay, sonnetWeekly, opusWeekly, extraUsage, fetch, isLoading } = useUsageStore();
   const loadFromStore = useConnectionStore((s) => s.loadFromStore);
   const loadSettings = useSettingsStore((s) => s.loadSettings);
   const [ready, setReady] = useState(false);
@@ -85,6 +87,8 @@ export function TrayPage() {
           fiveHour: cache.fiveHour,
           sevenDay: cache.sevenDay,
           sonnetWeekly: cache.sonnetWeekly ?? null,
+          opusWeekly: cache.opusWeekly ?? null,
+          extraUsage: cache.extraUsage ?? null,
           lastFetched: cache.cachedAt,
         });
       }
@@ -135,19 +139,16 @@ export function TrayPage() {
     );
   }
 
-  // Maior utilizacao para o texto central
-  const values = [
-    fiveHour?.utilization ?? 0,
-    sevenDay?.utilization ?? 0,
-    sonnetWeekly?.utilization ?? 0,
-  ];
-  const maxUsage = Math.round(Math.max(...values));
-
+  // Rings dinamicos (sempre session + weekly, demais se disponiveis)
   const rings = [
     { value: fiveHour?.utilization ?? 0, color: "#10b981" },
     { value: sevenDay?.utilization ?? 0, color: "#a78bfa" },
-    { value: sonnetWeekly?.utilization ?? 0, color: "#60a5fa" },
   ];
+  if (sonnetWeekly) rings.push({ value: sonnetWeekly.utilization, color: "#60a5fa" });
+  if (opusWeekly) rings.push({ value: opusWeekly.utilization, color: "#fb923c" });
+  if (extraUsage?.is_enabled && extraUsage.utilization != null) {
+    rings.push({ value: extraUsage.utilization, color: "#f472b6" });
+  }
 
   return (
     <div className="h-screen p-1.5 select-none">
@@ -181,8 +182,6 @@ export function TrayPage() {
           size={130}
           strokeWidth={10}
           gap={4}
-          showCenter
-          centerText={`${maxUsage}%`}
         />
       </div>
 
@@ -191,6 +190,16 @@ export function TrayPage() {
         <LegendRow color="#10b981" label="Session (5h)" data={fiveHour} />
         <LegendRow color="#a78bfa" label="Weekly (7d)" data={sevenDay} />
         <LegendRow color="#60a5fa" label="Sonnet (7d)" data={sonnetWeekly} />
+        {opusWeekly && (
+          <LegendRow color="#fb923c" label="Opus (7d)" data={opusWeekly} />
+        )}
+        {extraUsage?.is_enabled && extraUsage.utilization != null && (
+          <LegendRow
+            color="#f472b6"
+            label="Extra Usage"
+            data={{ utilization: extraUsage.utilization, resets_at: null }}
+          />
+        )}
       </div>
 
       {/* Footer */}

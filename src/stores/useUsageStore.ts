@@ -6,12 +6,14 @@ import { renderTrayIcon } from "@/services/trayIcon";
 import { isMacOS } from "@/lib/platform";
 import { setValue, deleteValue } from "@/services/store";
 import { useConnectionStore } from "./useConnectionStore";
-import type { UsageWindow } from "@/types/usage";
+import type { UsageWindow, ExtraUsage } from "@/types/usage";
 
 interface UsageState {
   fiveHour: UsageWindow | null;
   sevenDay: UsageWindow | null;
   sonnetWeekly: UsageWindow | null;
+  opusWeekly: UsageWindow | null;
+  extraUsage: ExtraUsage | null;
   isLoading: boolean;
   lastFetched: number | null;
   error: string | null;
@@ -28,6 +30,8 @@ export const useUsageStore = create<UsageState>((set) => ({
   fiveHour: null,
   sevenDay: null,
   sonnetWeekly: null,
+  opusWeekly: null,
+  extraUsage: null,
   isLoading: false,
   lastFetched: null,
   error: null,
@@ -42,7 +46,6 @@ export const useUsageStore = create<UsageState>((set) => ({
       handleSuccess(set, data);
     } catch (e) {
       if (isAuthError(e)) {
-        // Tentar re-detectar token (Claude CLI pode ter renovado)
         const refreshed = await useConnectionStore.getState().refreshToken();
         if (refreshed) {
           try {
@@ -54,7 +57,6 @@ export const useUsageStore = create<UsageState>((set) => ({
             // Refresh falhou, desconectar
           }
         }
-        // Token nao renovado ou retry falhou - preserva config
         useConnectionStore.setState({ token: "", isConnected: false });
         await deleteValue("token");
         invoke("clear_tray_display").catch(() => {});
@@ -72,12 +74,20 @@ export const useUsageStore = create<UsageState>((set) => ({
 
 function handleSuccess(
   set: (state: Partial<UsageState>) => void,
-  data: { five_hour: UsageWindow; seven_day: UsageWindow; seven_day_sonnet: UsageWindow | null },
+  data: {
+    five_hour: UsageWindow;
+    seven_day: UsageWindow;
+    seven_day_sonnet: UsageWindow | null;
+    seven_day_opus: UsageWindow | null;
+    extra_usage: ExtraUsage | null;
+  },
 ) {
   set({
     fiveHour: data.five_hour,
     sevenDay: data.seven_day,
     sonnetWeekly: data.seven_day_sonnet ?? null,
+    opusWeekly: data.seven_day_opus ?? null,
+    extraUsage: data.extra_usage ?? null,
     isLoading: false,
     lastFetched: Date.now(),
   });
@@ -87,6 +97,8 @@ function handleSuccess(
     fiveHour: data.five_hour,
     sevenDay: data.seven_day,
     sonnetWeekly: data.seven_day_sonnet ?? null,
+    opusWeekly: data.seven_day_opus ?? null,
+    extraUsage: data.extra_usage ?? null,
     cachedAt: Date.now(),
   }).catch(() => {});
 
@@ -96,21 +108,35 @@ function handleSuccess(
   if (data.seven_day_sonnet) {
     checkAndNotify("sonnetWeekly", data.seven_day_sonnet.utilization, "Sonnet 7d").catch(() => {});
   }
+  if (data.seven_day_opus) {
+    checkAndNotify("opusWeekly", data.seven_day_opus.utilization, "Opus 7d").catch(() => {});
+  }
+  if (data.extra_usage?.is_enabled && data.extra_usage.utilization != null) {
+    checkAndNotify("extraUsage", data.extra_usage.utilization, "Extra Usage").catch(() => {});
+  }
 
-  // Atualizar tray tooltip + title + icone
+  // Atualizar tray tooltip + icone
   const sonnetUtil = data.seven_day_sonnet?.utilization ?? 0;
+  const opusUtil = data.seven_day_opus?.utilization ?? 0;
+  const extraUtil = (data.extra_usage?.is_enabled && data.extra_usage.utilization != null)
+    ? data.extra_usage.utilization
+    : 0;
+
   invoke("update_tray_tooltip", {
     fiveHour: data.five_hour.utilization,
     sevenDay: data.seven_day.utilization,
     sonnet: sonnetUtil,
+    opus: opusUtil,
+    extra: extraUtil,
   }).catch(() => {});
 
-  // Icone dinamico apenas no macOS (Windows/Linux usa icone padrao)
   if (isMacOS()) {
     renderTrayIcon(
       data.five_hour.utilization,
       data.seven_day.utilization,
       sonnetUtil,
+      opusUtil,
+      extraUtil,
     ).catch(() => {});
   }
 }

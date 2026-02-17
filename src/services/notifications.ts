@@ -7,11 +7,15 @@ import { useSettingsStore } from "@/stores/useSettingsStore";
 
 const THRESHOLDS = [80, 90, 100] as const;
 
+type UsageWindowKey = "fiveHour" | "sevenDay" | "sonnetWeekly" | "opusWeekly" | "extraUsage";
+
 // Thresholds ja notificados por janela
-const notified: Record<string, Set<number>> = {
+const notified: Record<UsageWindowKey, Set<number>> = {
   fiveHour: new Set(),
   sevenDay: new Set(),
   sonnetWeekly: new Set(),
+  opusWeekly: new Set(),
+  extraUsage: new Set(),
 };
 
 // Controle de primeiro fetch (nao notifica na abertura do app)
@@ -33,7 +37,7 @@ const messages: Record<number, { title: string; body: string }> = {
 };
 
 export async function checkAndNotify(
-  window: "fiveHour" | "sevenDay" | "sonnetWeekly",
+  window: UsageWindowKey,
   utilization: number,
   windowLabel: string,
 ): Promise<void> {
