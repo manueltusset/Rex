@@ -4,7 +4,7 @@ mod services;
 
 use commands::auth::{detect_oauth_token, cli_refresh_token};
 use commands::platform::get_platform_info;
-use commands::sessions::{list_sessions, read_session};
+use commands::sessions::{list_sessions, read_session, search_sessions};
 use commands::terminal::resume_session;
 use commands::tray::{update_tray_icon, update_tray_tooltip};
 use commands::usage::fetch_usage;
@@ -86,6 +86,7 @@ pub fn run() {
             fetch_usage,
             list_sessions,
             read_session,
+            search_sessions,
             resume_session,
             get_platform_info,
             update_tray_tooltip,
