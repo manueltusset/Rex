@@ -1,20 +1,85 @@
-import { UsageCard } from "@/components/dashboard/UsageCard";
 import { SessionList } from "@/components/dashboard/SessionList";
+import { ActivityRings } from "@/components/ui/ActivityRings";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
 import { Card } from "@/components/ui/Card";
 import { Spinner } from "@/components/ui/Spinner";
 import { useUsageStore } from "@/stores/useUsageStore";
 import { useSessionStore } from "@/stores/useSessionStore";
+import { formatTimeUntil } from "@/utils/formatters";
+import type { UsageWindow } from "@/types/usage";
+
+function legendColor(value: number, base: string): string {
+  if (value >= 90) return "#ef4444";
+  if (value >= 80) return "#f59e0b";
+  return base;
+}
+
+function statusBadge(used: number) {
+  if (used >= 90) return { label: "CRITICAL", cls: "bg-danger/10 text-danger border-danger/20" };
+  if (used >= 80) return { label: "NEAR LIMIT", cls: "bg-rex-accent/10 text-rex-accent border-rex-accent/20" };
+  return { label: "NORMAL", cls: "bg-ring-bg text-muted border-border" };
+}
+
+function UsageLegendRow({
+  color,
+  label,
+  data,
+}: {
+  color: string;
+  label: string;
+  data: UsageWindow | null;
+}) {
+  const used = data ? Math.round(data.utilization) : 0;
+  const dotColor = data ? legendColor(used, color) : color;
+  const badge = statusBadge(used);
+
+  if (!data) {
+    return (
+      <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-surface/50 opacity-50">
+        <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
+        <span className="text-sm text-muted-subtle flex-1">{label}</span>
+        <span className="text-sm text-muted-subtle">--</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-surface/50">
+      <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: dotColor }} />
+      <span className="text-sm text-muted flex-1">{label}</span>
+      <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium border ${badge.cls}`}>
+        {badge.label}
+      </span>
+      <span className="text-sm font-bold text-foreground w-12 text-right">
+        {used}%
+      </span>
+      <span className="text-xs text-muted-subtle w-20 text-right">
+        {data.resets_at ? formatTimeUntil(data.resets_at) : "--"}
+      </span>
+    </div>
+  );
+}
 
 export function DashboardPage() {
-  const { fiveHour, sevenDay, sonnetWeekly, isLoading: usageLoading, fetch: fetchUsage } = useUsageStore();
+  const { fiveHour, sevenDay, sonnetWeekly, opusWeekly, extraUsage, isLoading: usageLoading, fetch: fetchUsage } = useUsageStore();
   const { fetch: fetchSessions } = useSessionStore();
 
   const handleRefresh = () => {
     fetchUsage();
     fetchSessions();
   };
+
+  // Rings dinamicos
+  const rings = [
+    { value: fiveHour?.utilization ?? 0, color: "#10b981" },
+    { value: sevenDay?.utilization ?? 0, color: "#a78bfa" },
+  ];
+  if (sonnetWeekly) rings.push({ value: sonnetWeekly.utilization, color: "#60a5fa" });
+  if (opusWeekly) rings.push({ value: opusWeekly.utilization, color: "#fb923c" });
+  if (extraUsage?.is_enabled && extraUsage.utilization != null) {
+    rings.push({ value: extraUsage.utilization, color: "#f472b6" });
+  }
 
   return (
     <>
@@ -40,56 +105,40 @@ export function DashboardPage() {
         </div>
       </header>
 
-      {/* Cards de uso - 3 colunas */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        {fiveHour ? (
-          <UsageCard
-            title="Session Limit (5h)"
-            utilization={fiveHour.utilization}
-            resetsAt={fiveHour.resets_at}
-            accentColor="text-usage-session"
-            hoverBorder="hover:border-usage-session/30"
-          />
-        ) : (
-          <Card>
-            <div className="flex items-center justify-center min-h-[100px]">
-              {usageLoading ? <Spinner /> : <p className="text-muted-subtle">No session data</p>}
-            </div>
-          </Card>
-        )}
-
-        {sevenDay ? (
-          <UsageCard
-            title="Weekly Usage (7d)"
-            utilization={sevenDay.utilization}
-            resetsAt={sevenDay.resets_at}
-            accentColor="text-usage-weekly"
-            hoverBorder="hover:border-usage-weekly/30"
-          />
-        ) : (
-          <Card>
-            <div className="flex items-center justify-center min-h-[100px]">
-              {usageLoading ? <Spinner /> : <p className="text-muted-subtle">No weekly data</p>}
-            </div>
-          </Card>
-        )}
-
-        {sonnetWeekly ? (
-          <UsageCard
-            title="Sonnet Limit (7d)"
-            utilization={sonnetWeekly.utilization}
-            resetsAt={sonnetWeekly.resets_at}
-            accentColor="text-usage-sonnet"
-            hoverBorder="hover:border-usage-sonnet/30"
-          />
-        ) : (
-          <Card>
-            <div className="flex items-center justify-center min-h-[100px]">
-              {usageLoading ? <Spinner /> : <p className="text-muted-subtle">No sonnet data</p>}
-            </div>
-          </Card>
-        )}
-      </div>
+      {/* Usage Overview */}
+      <Card className="mb-6">
+        <div className="flex items-center gap-8">
+          <div className="flex items-center justify-center shrink-0">
+            {usageLoading && !fiveHour ? (
+              <div className="w-[180px] h-[180px] flex items-center justify-center">
+                <Spinner />
+              </div>
+            ) : (
+              <ActivityRings
+                rings={rings}
+                size={180}
+                strokeWidth={12}
+                gap={5}
+              />
+            )}
+          </div>
+          <div className="flex-1 space-y-1.5 min-w-0">
+            <UsageLegendRow color="#10b981" label="Session (5h)" data={fiveHour} />
+            <UsageLegendRow color="#a78bfa" label="Weekly (7d)" data={sevenDay} />
+            <UsageLegendRow color="#60a5fa" label="Sonnet (7d)" data={sonnetWeekly} />
+            {opusWeekly && (
+              <UsageLegendRow color="#fb923c" label="Opus (7d)" data={opusWeekly} />
+            )}
+            {extraUsage?.is_enabled && extraUsage.utilization != null && (
+              <UsageLegendRow
+                color="#f472b6"
+                label="Extra Usage"
+                data={{ utilization: extraUsage.utilization, resets_at: null }}
+              />
+            )}
+          </div>
+        </div>
+      </Card>
 
       {/* Lista de sessoes */}
       <SessionList />

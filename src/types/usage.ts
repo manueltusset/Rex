@@ -3,8 +3,17 @@ export interface UsageWindow {
   resets_at: string | null;
 }
 
+export interface ExtraUsage {
+  is_enabled: boolean;
+  monthly_limit: number | null;
+  used_credits: number | null;
+  utilization: number | null;
+}
+
 export interface UsageResponse {
   five_hour: UsageWindow;
   seven_day: UsageWindow;
   seven_day_sonnet: UsageWindow | null;
+  seven_day_opus: UsageWindow | null;
+  extra_usage: ExtraUsage | null;
 }
