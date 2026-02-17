@@ -4,6 +4,7 @@ export const ROUTES = {
   HISTORY: "/history",
   PROJECTS: "/projects",
   USAGE: "/usage",
+  MCP: "/mcp",
   SETTINGS: "/settings",
   TRAY: "/tray",
 } as const;

@@ -8,6 +8,7 @@ const navItems = [
   { to: ROUTES.HISTORY, icon: "history", label: "History" },
   { to: ROUTES.PROJECTS, icon: "folder_open", label: "Projects" },
   { to: ROUTES.USAGE, icon: "bar_chart", label: "Usage & Limits" },
+  { to: ROUTES.MCP, icon: "hub", label: "MCP Servers" },
 ];
 
 export function Sidebar() {

@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+import { Link } from "react-router-dom";
 import { SessionList } from "@/components/dashboard/SessionList";
 import { ActivityRings } from "@/components/ui/ActivityRings";
 import { Button } from "@/components/ui/Button";
@@ -6,7 +8,9 @@ import { Card } from "@/components/ui/Card";
 import { Spinner } from "@/components/ui/Spinner";
 import { useUsageStore } from "@/stores/useUsageStore";
 import { useSessionStore } from "@/stores/useSessionStore";
+import { useMcpStore } from "@/stores/useMcpStore";
 import { formatTimeUntil } from "@/utils/formatters";
+import { ROUTES } from "@/utils/constants";
 import type { UsageWindow } from "@/types/usage";
 
 function legendColor(value: number, base: string): string {
@@ -64,10 +68,16 @@ function UsageLegendRow({
 export function DashboardPage() {
   const { fiveHour, sevenDay, sonnetWeekly, opusWeekly, extraUsage, isLoading: usageLoading, fetch: fetchUsage } = useUsageStore();
   const { fetch: fetchSessions } = useSessionStore();
+  const { servers: mcpServers, fetch: fetchMcp } = useMcpStore();
+
+  useEffect(() => {
+    fetchMcp();
+  }, [fetchMcp]);
 
   const handleRefresh = () => {
     fetchUsage();
     fetchSessions();
+    fetchMcp();
   };
 
   // Rings dinamicos
@@ -139,6 +149,50 @@ export function DashboardPage() {
           </div>
         </div>
       </Card>
+
+      {/* MCP Status (compacto) */}
+      {mcpServers.length > 0 && (
+        <Card className="mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Icon name="hub" size="sm" className="text-muted" />
+              <h3 className="text-sm font-bold text-foreground">MCP Servers</h3>
+              <span className="text-xs text-muted-subtle">
+                {mcpServers.filter((s) => s.status === "ok").length}/{mcpServers.length} connected
+              </span>
+            </div>
+            <Link
+              to={ROUTES.MCP}
+              className="text-xs text-primary hover:text-primary-light transition-colors"
+            >
+              View all
+            </Link>
+          </div>
+          <div className="space-y-1">
+            {mcpServers.map((server) => (
+              <div
+                key={`${server.scope}-${server.name}-${server.project_path ?? ""}`}
+                className="flex items-center gap-2.5 px-2 py-1.5 rounded-md hover:bg-surface/50"
+              >
+                <div
+                  className={`w-2 h-2 rounded-full shrink-0 ${
+                    server.status === "ok"
+                      ? "bg-primary"
+                      : server.status === "error"
+                        ? "bg-danger"
+                        : "bg-muted-subtle"
+                  }`}
+                />
+                <span className="text-xs text-foreground">{server.name}</span>
+                <span className="text-[10px] text-muted-subtle font-mono">{server.server_type}</span>
+                {server.status === "error" && server.error_message && (
+                  <span className="text-[10px] text-danger truncate ml-auto">{server.error_message}</span>
+                )}
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
 
       {/* Lista de sessoes */}
       <SessionList />
