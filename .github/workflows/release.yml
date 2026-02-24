@@ -41,7 +41,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Bump version in package.json and package-lock.json
-        run: npm version ${{ github.event.inputs.version }} --no-git-tag-version
+        run: npm version ${{ github.event.inputs.version }} --no-git-tag-version --allow-same-version
 
       - name: Bump version in Cargo.toml
         run: sed -i 's/^version = ".*"/version = "${{ github.event.inputs.version }}"/' src-tauri/Cargo.toml
@@ -50,13 +50,13 @@ jobs:
         working-directory: src-tauri
         run: cargo update --workspace
 
-      - name: Commit and tag
+      - name: Commit, tag and push
         run: |
           git add package.json package-lock.json src-tauri/Cargo.toml src-tauri/Cargo.lock
-          git commit -m "chore: bump version to ${{ github.event.inputs.version }}"
+          git diff --cached --quiet && echo "No version changes to commit" || git commit -m "chore: bump version to ${{ github.event.inputs.version }}"
           git push
-          git tag "v${{ github.event.inputs.version }}"
-          git push origin "v${{ github.event.inputs.version }}"
+          git tag -f "v${{ github.event.inputs.version }}"
+          git push origin "v${{ github.event.inputs.version }}" --force
 
   build-and-release:
     needs: bump-version
