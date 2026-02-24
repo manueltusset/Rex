@@ -12,11 +12,19 @@ concurrency:
 
 jobs:
   check:
-    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: ubuntu-22.04
+          - platform: macos-latest
+          - platform: windows-latest
+    runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v4
 
       - name: Install Linux dependencies
+        if: matrix.platform == 'ubuntu-22.04'
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf
@@ -48,11 +56,22 @@ jobs:
   build-verify:
     if: github.event_name == 'push'
     needs: check
-    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: ubuntu-22.04
+            args: '--bundles deb'
+          - platform: macos-latest
+            args: '--target aarch64-apple-darwin --bundles dmg'
+          - platform: windows-latest
+            args: '--bundles nsis'
+    runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v4
 
       - name: Install Linux dependencies
+        if: matrix.platform == 'ubuntu-22.04'
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf
@@ -65,6 +84,8 @@ jobs:
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin' || '' }}
 
       - name: Rust cache
         uses: swatinem/rust-cache@v2
@@ -74,5 +95,5 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
 
-      - name: Build (Linux verification)
-        run: npx tauri build --bundles deb
+      - name: Build verification
+        run: npx tauri build ${{ matrix.args }}
