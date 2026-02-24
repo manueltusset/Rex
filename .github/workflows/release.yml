@@ -50,11 +50,10 @@ jobs:
         working-directory: src-tauri
         run: cargo update --workspace
 
-      - name: Commit, tag and push
+      - name: Commit and tag
         run: |
           git add package.json package-lock.json src-tauri/Cargo.toml src-tauri/Cargo.lock
-          git diff --cached --quiet && echo "No version changes to commit" || git commit -m "chore: bump version to ${{ github.event.inputs.version }}"
-          git push
+          git diff --cached --quiet && echo "No version changes" || git commit -m "chore: bump version to ${{ github.event.inputs.version }}"
           git tag -f "v${{ github.event.inputs.version }}"
           git push origin "v${{ github.event.inputs.version }}" --force
 
