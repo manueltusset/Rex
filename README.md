@@ -23,8 +23,9 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows-333?style=flat-square" alt="Platforms" />
+  <img src="https://img.shields.io/github/actions/workflow/status/manueltusset/Rex/ci.yml?branch=main&style=flat-square&label=CI" alt="CI" />
   <img src="https://img.shields.io/badge/license-MIT-10B981?style=flat-square" alt="License" />
-  <img src="https://img.shields.io/badge/version-0.1.0-white?style=flat-square" alt="Version" />
+  <img src="https://img.shields.io/github/v/release/manueltusset/Rex?style=flat-square&label=version&color=white" alt="Version" />
 </p>
 
 ---
@@ -259,6 +260,19 @@ Clicking **Resume** on any session opens a native terminal running `claude --res
 
 ---
 
+## Contributing
+
+Rex is open-source under the MIT license. Contributions, issues, and feature requests are welcome.
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feat/my-feature`)
+3. Commit your changes following [conventional commits](https://www.conventionalcommits.org/)
+4. Open a Pull Request against `main`
+
+CI runs `cargo check` and `tsc --noEmit` automatically on every PR.
+
+---
+
 ## License
 
-MIT
+[MIT](LICENSE)
