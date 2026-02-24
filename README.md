@@ -180,11 +180,48 @@ src/                            React frontend
 
 ---
 
-## Getting Started
+## Installation
+
+Download the latest release from the [Releases](https://github.com/manueltusset/Rex/releases) page.
+
+### macOS
+
+1. Download `Rex_x.x.x_aarch64.dmg` (Apple Silicon) or `Rex_x.x.x_x64.dmg` (Intel)
+2. Open the `.dmg` and drag Rex to **Applications**
+3. Run the following command to remove the quarantine attribute (required for unsigned apps):
+   ```bash
+   xattr -cr /Applications/Rex.app
+   ```
+4. Open Rex from Applications
+
+### Linux
+
+**Debian/Ubuntu (.deb):**
+```bash
+sudo dpkg -i Rex_x.x.x_amd64.deb
+```
+
+**AppImage:**
+```bash
+chmod +x Rex_x.x.x_amd64.AppImage
+./Rex_x.x.x_amd64.AppImage
+```
+
+### Windows
+
+1. Download `Rex_x.x.x_x64-setup.exe`
+2. Run the installer and follow the prompts
+3. Open Rex from the Start Menu
+
+> **Requirement:** [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) must be installed and authenticated (`claude` command available).
+
+---
+
+## Development
 
 ```bash
 # Clone
-git clone <repo-url> && cd Rex
+git clone https://github.com/manueltusset/Rex.git && cd Rex
 
 # Install frontend dependencies
 npm install
