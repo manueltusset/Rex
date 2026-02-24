@@ -41,6 +41,7 @@ export interface LongestSession {
 
 export interface GlobalStats {
   version: number | null;
+  lastComputedDate: string | null;
   dailyActivity: DailyActivity[];
   dailyModelTokens: DailyModelTokens[];
   modelUsage: Record<string, ModelUsageEntry>;
