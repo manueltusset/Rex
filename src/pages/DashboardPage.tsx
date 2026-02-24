@@ -11,7 +11,7 @@ import { useUsageStore } from "@/stores/useUsageStore";
 import { useSessionStore } from "@/stores/useSessionStore";
 import { useMcpStore } from "@/stores/useMcpStore";
 import { formatTimeUntil } from "@/utils/formatters";
-import { ROUTES } from "@/utils/constants";
+import { ROUTES, APP_VERSION } from "@/utils/constants";
 import type { UsageWindow } from "@/types/usage";
 
 function legendColor(value: number, base: string): string {
@@ -205,7 +205,7 @@ export function DashboardPage() {
       <footer className="mt-8 flex justify-between items-center text-xs text-muted-subtle font-mono pb-4">
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-primary shadow-[0_0_5px_rgba(16,185,129,0.5)]" />
-          <p>Rex v0.1.0 - Connected to Anthropic API</p>
+          <p>Rex v{APP_VERSION} - Connected to Anthropic API</p>
         </div>
       </footer>
     </>
