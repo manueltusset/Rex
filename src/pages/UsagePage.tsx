@@ -166,7 +166,7 @@ export function UsagePage() {
                 <div className="flex justify-between py-2 border-b border-border">
                   <span className="text-muted">Monthly Limit</span>
                   <span className="text-foreground font-mono">
-                    ${extraUsage.monthly_limit.toFixed(2)}
+                    ${(extraUsage.monthly_limit / 100).toFixed(2)}
                   </span>
                 </div>
               )}
@@ -174,7 +174,7 @@ export function UsagePage() {
                 <div className="flex justify-between py-2 border-b border-border">
                   <span className="text-muted">Used Credits</span>
                   <span className="text-foreground font-mono">
-                    ${extraUsage.used_credits.toFixed(2)}
+                    ${(extraUsage.used_credits / 100).toFixed(2)}
                   </span>
                 </div>
               )}

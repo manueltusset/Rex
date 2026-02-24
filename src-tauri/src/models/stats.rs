@@ -59,6 +59,7 @@ pub struct LongestSession {
 #[serde(rename_all = "camelCase")]
 pub struct GlobalStats {
     pub version: Option<u32>,
+    pub last_computed_date: Option<String>,
     pub daily_activity: Vec<DailyActivity>,
     pub daily_model_tokens: Vec<DailyModelTokens>,
     pub model_usage: HashMap<String, ModelUsageEntry>,

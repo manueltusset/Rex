@@ -12,7 +12,6 @@ function shortModelName(model: string): string {
 }
 
 function MetricItem({ label, value }: { label: string; value: string }) {
-  if (value === "--") return null;
   return (
     <div className="text-center">
       <p className="text-xs font-bold text-foreground">{value}</p>
@@ -156,7 +155,6 @@ export function ProjectsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {projects.map((project) => {
             const metrics = metricsMap.get(project.path);
-            const hasMetrics = metrics && ((metrics.lastCost ?? 0) > 0 || (metrics.lastTotalInputTokens ?? 0) > 0);
             const hasCacheData = (metrics?.lastTotalCacheReadInputTokens ?? 0) > 0;
             const hasModelUsage = metrics?.lastModelUsage && Object.keys(metrics.lastModelUsage).length > 0;
 
@@ -196,28 +194,24 @@ export function ProjectsPage() {
                     {formatRelativeTime(project.lastActive)}
                   </span>
                 </div>
-                {hasMetrics && (
-                  <div className="mt-3 pt-3 border-t border-border flex items-center justify-around gap-2">
-                    <MetricItem label="Cost" value={formatCurrency(metrics.lastCost)} />
-                    <MetricItem
-                      label="Tokens"
-                      value={formatTokenCount(
-                        ((metrics.lastTotalInputTokens ?? 0) + (metrics.lastTotalOutputTokens ?? 0)) || null
-                      )}
-                    />
-                    {((metrics.lastLinesAdded ?? 0) > 0 || (metrics.lastLinesRemoved ?? 0) > 0) && (
-                      <div className="text-center">
-                        <p className="text-xs font-bold">
-                          <span className="text-primary">+{formatTokenCount(metrics.lastLinesAdded)}</span>
-                          {" / "}
-                          <span className="text-danger">-{formatTokenCount(metrics.lastLinesRemoved)}</span>
-                        </p>
-                        <p className="text-[10px] text-muted-subtle">Lines</p>
-                      </div>
+                <div className="mt-3 pt-3 border-t border-border flex items-center justify-around gap-2">
+                  <MetricItem label="Cost" value={formatCurrency(metrics?.lastCost ?? 0)} />
+                  <MetricItem
+                    label="Tokens"
+                    value={formatTokenCount(
+                      (metrics?.lastTotalInputTokens ?? 0) + (metrics?.lastTotalOutputTokens ?? 0)
                     )}
-                    <MetricItem label="Duration" value={formatDuration(metrics.lastDuration)} />
+                  />
+                  <div className="text-center">
+                    <p className="text-xs font-bold">
+                      <span className="text-primary">+{formatTokenCount(metrics?.lastLinesAdded ?? 0)}</span>
+                      {" / "}
+                      <span className="text-danger">-{formatTokenCount(metrics?.lastLinesRemoved ?? 0)}</span>
+                    </p>
+                    <p className="text-[10px] text-muted-subtle">Lines</p>
                   </div>
-                )}
+                  <MetricItem label="Duration" value={formatDuration(metrics?.lastDuration ?? 0)} />
+                </div>
                 {hasCacheData && (
                   <div className="mt-2 flex items-center gap-1.5 px-2">
                     <Icon name="cached" size="sm" className="text-muted-subtle" />
