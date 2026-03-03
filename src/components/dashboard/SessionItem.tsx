@@ -26,7 +26,7 @@ export function SessionItem({ session }: SessionItemProps) {
 
   return (
     <>
-      <div className="grid grid-cols-12 gap-4 px-6 py-5 hover:bg-foreground/[0.02] transition-colors items-center group">
+      <div className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-foreground/[0.02] transition-all items-center group">
         {/* Diretorio */}
         <div className="col-span-4 min-w-0">
           <div className="flex items-center gap-3">
@@ -46,10 +46,8 @@ export function SessionItem({ session }: SessionItemProps) {
 
         {/* Resumo */}
         <div className="col-span-4">
-          <span className="inline-flex items-center px-2.5 py-1 rounded text-xs font-medium bg-surface text-foreground-secondary border border-border-subtle">
-            {session.summary.length > 40
-              ? `${session.summary.substring(0, 40)}...`
-              : session.summary}
+          <span className="inline-flex items-center px-2.5 py-1 rounded text-xs font-medium bg-surface text-foreground-secondary border border-border-subtle max-w-full">
+            <span className="truncate">{session.summary}</span>
           </span>
         </div>
 

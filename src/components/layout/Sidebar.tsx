@@ -20,7 +20,7 @@ export function Sidebar() {
     <aside className="w-64 shrink-0 bg-sidebar border-r border-border-subtle flex flex-col justify-between h-full backdrop-blur-sm">
       <div className="p-6">
         {/* Logo */}
-        <div className="flex items-center gap-3 mb-10">
+        <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary-dark/20 to-primary/10 flex items-center justify-center border border-primary/20 shadow-[0_0_15px_rgba(16,185,129,0.15)] overflow-hidden p-1">
             <img
               src="/rex-logo.png"
@@ -38,8 +38,11 @@ export function Sidebar() {
           </div>
         </div>
 
+        {/* Separador gradiente */}
+        <div className="h-px bg-gradient-to-r from-primary/20 via-border to-transparent mb-6" />
+
         {/* Navegacao */}
-        <nav className="space-y-1">
+        <nav className="space-y-0.5">
           {navItems.map((item) => (
             <NavLink
               key={item.to}
@@ -48,8 +51,8 @@ export function Sidebar() {
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all ${
                   isActive
-                    ? "bg-primary/10 border border-primary/20 text-primary"
-                    : "text-muted hover:text-foreground hover:bg-foreground/5"
+                    ? "bg-gradient-to-r from-primary/[0.08] to-transparent border-l-2 border-l-primary text-foreground"
+                    : "text-muted hover:text-foreground hover:bg-foreground/[0.03] hover:translate-x-0.5"
                 }`
               }
             >
@@ -78,8 +81,8 @@ export function Sidebar() {
           className={({ isActive }) =>
             `flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all mb-4 group ${
               isActive
-                ? "bg-primary/10 text-primary"
-                : "text-muted hover:text-foreground hover:bg-foreground/5"
+                ? "bg-gradient-to-r from-primary/[0.08] to-transparent border-l-2 border-l-primary text-foreground"
+                : "text-muted hover:text-foreground hover:bg-foreground/[0.03] hover:translate-x-0.5"
             }`
           }
         >
@@ -87,7 +90,7 @@ export function Sidebar() {
           Settings
         </NavLink>
 
-        <div className="glass-panel p-3 rounded-lg flex items-center gap-3 hover:border-primary/30 transition-colors cursor-pointer group">
+        <div className="p-3 rounded-lg bg-surface/30 border border-border/50 flex items-center gap-3 hover:border-primary/30 transition-colors cursor-pointer group">
           <div className="relative">
             <div className="w-8 h-8 rounded-full bg-primary-dark/40 flex items-center justify-center ring-1 ring-border">
               <Icon name="person" size="sm" className="text-primary-light" />
@@ -120,8 +123,9 @@ export function Sidebar() {
           </div>
         </div>
 
-        <p className="mt-4 text-center text-[10px] text-muted-subtle font-mono">
-          Rex v{APP_VERSION}
+        <div className="h-px bg-border/30 my-3" />
+        <p className="text-center text-[10px] text-muted-subtle/70 font-mono tracking-widest">
+          v{APP_VERSION}
         </p>
       </div>
     </aside>

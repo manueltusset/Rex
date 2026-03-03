@@ -1,4 +1,6 @@
 import { useEffect } from "react";
+import { AnimateIn } from "@/components/ui/AnimateIn";
+import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Icon } from "@/components/ui/Icon";
@@ -73,7 +75,8 @@ function ServerCard({ server }: { server: McpServerStatus }) {
           </div>
 
           {server.error_message && (
-            <div className="mt-2 px-2 py-1.5 rounded bg-danger/5 border border-danger/10">
+            <div className="mt-2 px-3 py-2 rounded-lg bg-danger/5 border border-danger/10 flex items-start gap-2">
+              <Icon name="warning" size="sm" className="text-danger shrink-0 mt-0.5" />
               <p className="text-xs text-danger">{server.error_message}</p>
             </div>
           )}
@@ -95,34 +98,36 @@ export function McpStatusPage() {
 
   return (
     <>
-      <header className="flex justify-between items-end mb-8">
-        <div>
-          <p className="text-xs font-medium text-primary mb-2 font-mono tracking-widest uppercase opacity-80">
-            Integrations
-          </p>
+      <AnimateIn>
+        <header className="flex justify-between items-end mb-8">
+          <div>
+            <p className="text-xs font-medium text-primary mb-2 font-mono tracking-widest uppercase opacity-80">
+              Integrations
+            </p>
+            <div className="flex items-center gap-3">
+              <h2 className="text-3xl font-bold text-foreground tracking-tight font-display">
+                MCP Servers
+              </h2>
+              {servers.length > 0 && (
+                <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-surface border border-border text-muted">
+                  {servers.length}
+                </span>
+              )}
+            </div>
+          </div>
           <div className="flex items-center gap-3">
-            <h2 className="text-3xl font-bold text-foreground tracking-tight font-display">
-              MCP Servers
-            </h2>
-            {servers.length > 0 && (
-              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-surface border border-border text-muted">
-                {servers.length}
+            {lastChecked && (
+              <span className="text-xs text-muted-subtle font-mono">
+                {new Date(lastChecked).toLocaleTimeString()}
               </span>
             )}
+            <Button variant="secondary" onClick={fetch}>
+              {isLoading ? <Spinner size="sm" /> : <Icon name="refresh" size="sm" />}
+              Refresh
+            </Button>
           </div>
-        </div>
-        <div className="flex items-center gap-3">
-          {lastChecked && (
-            <span className="text-xs text-muted-subtle font-mono">
-              {new Date(lastChecked).toLocaleTimeString()}
-            </span>
-          )}
-          <Button variant="secondary" onClick={fetch}>
-            {isLoading ? <Spinner size="sm" /> : <Icon name="refresh" size="sm" />}
-            Refresh
-          </Button>
-        </div>
-      </header>
+        </header>
+      </AnimateIn>
 
       {error && (
         <Card className="mb-6 border-danger/30">
@@ -134,18 +139,20 @@ export function McpStatusPage() {
       )}
 
       {servers.length > 0 && (
-        <div className="flex gap-4 mb-6">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface border border-border">
-            <div className="w-2 h-2 rounded-full bg-primary" />
-            <span className="text-xs text-muted">{connectedCount} connected</span>
-          </div>
+        <AnimateIn delay={80}>
+        <div className="flex gap-3 mb-6">
+          <Badge variant="green">
+            <span className="w-2 h-2 rounded-full bg-primary mr-1.5 inline-block" />
+            {connectedCount} connected
+          </Badge>
           {errorCount > 0 && (
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface border border-border">
-              <div className="w-2 h-2 rounded-full bg-danger" />
-              <span className="text-xs text-danger">{errorCount} error</span>
-            </div>
+            <Badge variant="danger">
+              <span className="w-2 h-2 rounded-full bg-danger mr-1.5 inline-block" />
+              {errorCount} error
+            </Badge>
           )}
         </div>
+        </AnimateIn>
       )}
 
       {isLoading && servers.length === 0 ? (
@@ -169,8 +176,10 @@ export function McpStatusPage() {
         </Card>
       ) : (
         <div className="space-y-3">
-          {servers.map((server) => (
-            <ServerCard key={`${server.scope}-${server.name}-${server.project_path ?? ""}`} server={server} />
+          {servers.map((server, index) => (
+            <AnimateIn key={`${server.scope}-${server.name}-${server.project_path ?? ""}`} delay={Math.min(80 + index * 60, 500)}>
+              <ServerCard server={server} />
+            </AnimateIn>
           ))}
         </div>
       )}

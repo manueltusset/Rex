@@ -140,15 +140,24 @@ function CollapsibleBlock({
         onClick={() => setOpen(!open)}
         className="flex items-center gap-2 w-full px-3 py-1.5 text-xs text-muted hover:bg-surface/50 transition-colors cursor-pointer"
       >
-        <Icon name={icon} className="text-[14px]" />
+        <Icon name={icon} size="sm" />
         <span className="font-medium">{label}</span>
-        <Icon name={open ? "expand_less" : "expand_more"} className="ml-auto text-[16px]" />
+        <Icon
+          name="expand_more"
+          className={`ml-auto text-base transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+        />
       </button>
-      {open && (
-        <div className="px-3 py-2 text-xs border-t border-border-subtle bg-surface/30">
-          {children}
+      <div
+        className={`grid transition-[grid-template-rows] duration-200 ease-out ${
+          open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+        }`}
+      >
+        <div className="overflow-hidden">
+          <div className="px-3 py-2 text-xs border-t border-border-subtle bg-surface/30">
+            {children}
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
@@ -159,7 +168,7 @@ const markdownComponents = {
     const match = /language-(\w+)/.exec(className || "");
     if (!match) {
       return (
-        <code className="bg-foreground/8 px-1.5 py-0.5 rounded text-[12px] font-mono text-foreground">
+        <code className="bg-foreground/[0.06] px-1.5 py-0.5 rounded text-xs font-mono text-foreground border border-foreground/[0.04]">
           {children}
         </code>
       );
@@ -326,18 +335,18 @@ function SearchBar({
   resultCount: number | null;
 }) {
   return (
-    <div className="sticky top-0 z-10 bg-bg/95 backdrop-blur-sm border-b border-border-subtle px-5 py-2.5">
-      <div className="relative">
-        <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-subtle text-[16px]" />
+    <div className="sticky top-0 z-10 bg-bg/80 backdrop-blur-md border-b border-border-subtle px-5 py-2.5">
+      <div className="relative group">
+        <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-subtle text-base group-focus-within:text-primary transition-colors" />
         <input
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder="Search in conversation..."
-          className="w-full pl-9 pr-3 py-1.5 text-xs bg-surface border border-border rounded-lg text-foreground placeholder:text-muted-subtle focus:outline-none focus:border-primary/50"
+          className="w-full pl-9 pr-3 py-1.5 text-xs bg-surface/50 border border-border-subtle rounded-lg text-foreground placeholder:text-muted-subtle focus:outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/20 transition-all font-mono"
         />
         {value && resultCount !== null && (
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-muted-subtle">
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-muted-subtle font-mono">
             {resultCount} {resultCount === 1 ? "match" : "matches"}
           </span>
         )}
@@ -435,29 +444,33 @@ export function ConversationViewer({ entries, isLoading, error }: ConversationVi
               key={i}
               className={`flex flex-col min-w-0 ${isUser ? "items-end" : "items-start"} max-w-[85%] ${isUser ? "self-end" : "self-start"}`}
             >
-              <span className="text-[10px] text-muted-subtle mb-1 px-1 font-mono">
-                {isUser ? "You" : "Claude"}
+              <div className="flex items-center gap-1.5 mb-1 px-1">
+                <Icon
+                  name={isUser ? "person" : "smart_toy"}
+                  className={`text-xs ${isUser ? "text-primary/60" : "text-muted-subtle"}`}
+                />
+                <span className="text-[10px] text-muted-subtle font-mono font-medium">
+                  {isUser ? "You" : "Claude"}
+                </span>
                 {msg.timestamp && (
-                  <span className="ml-2 opacity-60">
+                  <span className="text-[10px] text-muted-subtle/50 font-mono">
                     {formatRelativeTime(msg.timestamp)}
                   </span>
                 )}
-              </span>
+              </div>
               <div
                 className={`group relative px-4 py-3 text-sm leading-relaxed overflow-hidden max-w-full ${
                   isUser
-                    ? "bg-primary/10 border border-primary/20 rounded-xl rounded-br-sm text-foreground"
-                    : "bg-surface border border-border-subtle rounded-xl rounded-bl-sm text-foreground-secondary"
+                    ? "bg-primary/[0.06] border border-primary/15 rounded-2xl rounded-br-sm text-foreground"
+                    : "bg-surface/80 border border-border-subtle rounded-2xl rounded-bl-sm text-foreground-secondary"
                 }`}
               >
                 {msg.blocks.map((block, j) => <BlockRenderer key={j} block={block} />)}
 
-                {/* Botao copy na mensagem */}
                 {fullText && (
-                  <CopyButton
-                    text={fullText}
-                    className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100"
-                  />
+                  <div className="flex justify-end mt-1 -mb-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <CopyButton text={fullText} />
+                  </div>
                 )}
               </div>
             </div>
@@ -474,14 +487,13 @@ export function ConversationViewer({ entries, isLoading, error }: ConversationVi
         )}
       </div>
 
-      {/* Scroll to bottom */}
       {showScrollBtn && (
         <button
           onClick={scrollToBottom}
-          className="fixed bottom-6 right-6 p-2.5 bg-primary text-white rounded-full shadow-lg hover:bg-primary-light transition-colors cursor-pointer z-20"
+          className="absolute bottom-4 right-4 p-2.5 bg-primary/90 text-white rounded-full shadow-elevation-3 hover:bg-primary hover:shadow-glow transition-all cursor-pointer z-20 backdrop-blur-sm border border-primary/30"
           title="Scroll to bottom"
         >
-          <Icon name="keyboard_arrow_down" className="text-[20px]" />
+          <Icon name="keyboard_arrow_down" size="sm" />
         </button>
       )}
     </div>

@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { AnimateIn } from "@/components/ui/AnimateIn";
 import { Icon } from "@/components/ui/Icon";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -96,17 +97,20 @@ export function ProjectsPage() {
 
   return (
     <>
-      <header className="mb-8">
-        <p className="text-xs font-medium text-primary mb-2 font-mono tracking-widest uppercase opacity-80">
-          Workspace
-        </p>
-        <h2 className="text-3xl font-bold text-foreground tracking-tight font-display">
-          Projects
-        </h2>
-      </header>
+      <AnimateIn>
+        <header className="mb-8">
+          <p className="text-xs font-medium text-primary mb-2 font-mono tracking-widest uppercase opacity-80">
+            Workspace
+          </p>
+          <h2 className="text-3xl font-bold text-foreground tracking-tight font-display">
+            Projects
+          </h2>
+        </header>
+      </AnimateIn>
 
       {/* Barra de resumo */}
       {hasTotals && (
+        <AnimateIn delay={80}>
         <Card className="mb-6">
           <div className="flex items-center gap-6 flex-wrap">
             <div className="flex items-center gap-2">
@@ -142,6 +146,7 @@ export function ProjectsPage() {
             </div>
           </div>
         </Card>
+        </AnimateIn>
       )}
 
       {projects.length === 0 ? (
@@ -153,15 +158,16 @@ export function ProjectsPage() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {projects.map((project) => {
+          {projects.map((project, index) => {
             const metrics = metricsMap.get(project.path);
             const hasCacheData = (metrics?.lastTotalCacheReadInputTokens ?? 0) > 0;
             const hasModelUsage = metrics?.lastModelUsage && Object.keys(metrics.lastModelUsage).length > 0;
 
             return (
-              <Card key={project.path}>
+              <AnimateIn key={project.path} delay={Math.min(80 + index * 60, 500)}>
+              <Card className="group">
                 <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-surface border border-border flex items-center justify-center text-primary-light">
+                  <div className="w-10 h-10 rounded-lg bg-surface border border-border flex items-center justify-center text-primary-light group-hover:border-primary/30 group-hover:bg-primary/[0.04] transition-all">
                     <Icon name="folder_open" />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -194,14 +200,16 @@ export function ProjectsPage() {
                     {formatRelativeTime(project.lastActive)}
                   </span>
                 </div>
-                <div className="mt-3 pt-3 border-t border-border flex items-center justify-around gap-2">
+                <div className="mt-3 pt-3 border-t border-border-subtle flex items-center justify-around gap-2">
                   <MetricItem label="Cost" value={formatCurrency(metrics?.lastCost ?? 0)} />
+                  <div className="w-px h-6 bg-border-subtle" />
                   <MetricItem
                     label="Tokens"
                     value={formatTokenCount(
                       (metrics?.lastTotalInputTokens ?? 0) + (metrics?.lastTotalOutputTokens ?? 0)
                     )}
                   />
+                  <div className="w-px h-6 bg-border-subtle" />
                   <div className="text-center">
                     <p className="text-xs font-bold">
                       <span className="text-primary">+{formatTokenCount(metrics?.lastLinesAdded ?? 0)}</span>
@@ -210,6 +218,7 @@ export function ProjectsPage() {
                     </p>
                     <p className="text-[10px] text-muted-subtle">Lines</p>
                   </div>
+                  <div className="w-px h-6 bg-border-subtle" />
                   <MetricItem label="Duration" value={formatDuration(metrics?.lastDuration ?? 0)} />
                 </div>
                 {hasCacheData && (
@@ -224,6 +233,7 @@ export function ProjectsPage() {
                   <ModelBreakdown modelUsage={metrics!.lastModelUsage!} />
                 )}
               </Card>
+              </AnimateIn>
             );
           })}
         </div>
