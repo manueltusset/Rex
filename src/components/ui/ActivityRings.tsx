@@ -1,3 +1,5 @@
+import { useState, useEffect } from "react";
+
 interface Ring {
   value: number;
   color: string;
@@ -30,6 +32,12 @@ export function ActivityRings({
   trackOpacity = 0.2,
 }: ActivityRingsProps) {
   const center = size / 2;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(raf);
+  }, []);
 
   // Raios calculados de fora para dentro
   const radii = rings.map((_, i) => {
@@ -46,10 +54,20 @@ export function ActivityRings({
       style={{ width: size, height: size }}
     >
       <svg width={size} height={size} className="transform -rotate-90">
+        <defs>
+          <filter id="ring-glow">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
         {rings.map((ring, i) => {
           const r = radii[i];
           const circumference = 2 * Math.PI * r;
-          const offset = circumference - (Math.min(ring.value, 100) / 100) * circumference;
+          const targetOffset = circumference - (Math.min(ring.value, 100) / 100) * circumference;
+          const displayOffset = mounted ? targetOffset : circumference;
           const color = effectiveColor(ring.value, ring.color);
 
           return (
@@ -74,8 +92,12 @@ export function ActivityRings({
                   stroke={color}
                   strokeWidth={strokeWidth}
                   strokeDasharray={circumference}
-                  strokeDashoffset={offset}
+                  strokeDashoffset={displayOffset}
                   strokeLinecap="round"
+                  filter={ring.value > 50 ? "url(#ring-glow)" : undefined}
+                  style={{
+                    transition: `stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1) ${i * 150}ms`,
+                  }}
                 />
               )}
             </g>

@@ -1,57 +1,49 @@
 @import "tailwindcss";
 
-@font-face {
-  font-family: "Space Grotesk";
-  src: url("https://fonts.gstatic.com/s/spacegrotesk/v16/V8mDoQDjQSkFtoMM3T6r8E7mPbF4Cw.woff2")
-    format("woff2");
-  font-weight: 300 700;
-  font-display: swap;
-}
-
-/* Tema Light (padrao) */
+/* Tema Light */
 :root {
-  --bg: #f3f4f6;
+  --bg: #f5f6f8;
   --card: #ffffff;
-  --surface: #f9fafb;
-  --foreground: #111827;
-  --foreground-secondary: #374151;
-  --muted: #6b7280;
-  --muted-subtle: #9ca3af;
-  --border: #e5e7eb;
-  --border-subtle: rgba(0, 0, 0, 0.06);
-  --ring-bg: #e5e7eb;
-  --sidebar-bg: rgba(249, 250, 251, 0.95);
-  --input-bg: rgba(243, 244, 246, 0.5);
-  --glass-card-bg: rgba(255, 255, 255, 0.7);
-  --glass-card-border: rgba(0, 0, 0, 0.08);
-  --glass-panel-bg: rgba(0, 0, 0, 0.02);
-  --glass-panel-border: rgba(0, 0, 0, 0.06);
-  --scrollbar-track: #f3f4f6;
-  --scrollbar-thumb: #d1d5db;
-  --placeholder: #9ca3af;
+  --surface: #f8f9fb;
+  --foreground: #0f1219;
+  --foreground-secondary: #2d3344;
+  --muted: #5f6880;
+  --muted-subtle: #8c94a8;
+  --border: #e2e5ec;
+  --border-subtle: rgba(0, 0, 0, 0.05);
+  --ring-bg: #e8eaef;
+  --sidebar-bg: rgba(248, 249, 251, 0.97);
+  --input-bg: rgba(240, 242, 246, 0.6);
+  --glass-card-bg: rgba(255, 255, 255, 0.8);
+  --glass-card-border: rgba(0, 0, 0, 0.06);
+  --glass-panel-bg: rgba(0, 0, 0, 0.015);
+  --glass-panel-border: rgba(0, 0, 0, 0.05);
+  --scrollbar-track: #f5f6f8;
+  --scrollbar-thumb: #cdd1d9;
+  --placeholder: #9098ab;
 }
 
-/* Tema Dark */
+/* Tema Dark -- azul-noite */
 :root.dark {
-  --bg: #0d0f12;
-  --card: #14181e;
-  --surface: #151920;
-  --foreground: #f9fafb;
-  --foreground-secondary: #e5e7eb;
-  --muted: #9ca3af;
-  --muted-subtle: #6b7280;
-  --border: #1e293b;
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --ring-bg: #1f2937;
-  --sidebar-bg: rgba(10, 12, 16, 0.95);
-  --input-bg: rgba(15, 23, 42, 0.5);
-  --glass-card-bg: rgba(20, 24, 30, 0.6);
-  --glass-card-border: rgba(255, 255, 255, 0.08);
-  --glass-panel-bg: rgba(255, 255, 255, 0.03);
-  --glass-panel-border: rgba(255, 255, 255, 0.06);
-  --scrollbar-track: #0d0f12;
-  --scrollbar-thumb: #272b33;
-  --placeholder: #64748b;
+  --bg: #0a0c10;
+  --card: #111318;
+  --surface: #161921;
+  --foreground: #f0f2f5;
+  --foreground-secondary: #d1d5dc;
+  --muted: #8b92a0;
+  --muted-subtle: #5a6173;
+  --border: #1c2030;
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --ring-bg: #1a1e2a;
+  --sidebar-bg: rgba(8, 10, 14, 0.97);
+  --input-bg: rgba(14, 18, 28, 0.6);
+  --glass-card-bg: rgba(17, 19, 24, 0.75);
+  --glass-card-border: rgba(255, 255, 255, 0.06);
+  --glass-panel-bg: rgba(255, 255, 255, 0.02);
+  --glass-panel-border: rgba(255, 255, 255, 0.05);
+  --scrollbar-track: #0a0c10;
+  --scrollbar-thumb: #252a35;
+  --placeholder: #4a5168;
 }
 
 @theme {
@@ -90,9 +82,9 @@
   --color-surface-dark: var(--surface);
   --color-border-dark: var(--border);
 
-  --font-sans: "Inter", system-ui, sans-serif;
-  --font-display: "Space Grotesk", system-ui, sans-serif;
-  --font-mono: "Space Grotesk", ui-monospace, monospace;
+  --font-sans: "DM Sans", system-ui, sans-serif;
+  --font-display: "DM Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
 }
 
 ::-webkit-scrollbar {
@@ -107,7 +99,7 @@
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #10b981;
+  background: var(--muted-subtle);
 }
 
 html,
@@ -132,7 +124,7 @@ textarea::placeholder {
 
 .glass-card {
   background: var(--glass-card-bg);
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(16px);
   border: 1px solid var(--glass-card-border);
 }
 
@@ -158,6 +150,99 @@ textarea::placeholder {
 
 .animate-modal-in {
   animation: modal-in 150ms ease-out;
+}
+
+/* Entrada de secoes/cards */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 500ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+/* Transicao de pagina */
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-page-in {
+  animation: page-in 250ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+/* Indicador ativo da sidebar */
+@keyframes sidebar-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-50%) scaleY(0);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-50%) scaleY(1);
+  }
+}
+
+.sidebar-indicator {
+  animation: sidebar-slide-in 200ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+/* Skeleton loading */
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.15; }
+}
+
+.skeleton-pulse {
+  animation: skeleton-pulse 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Card hover - dark mode */
+:root.dark .glass-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(16, 185, 129, 0.05);
+}
+
+/* Sombras compostas -- 3 niveis de elevacao */
+.shadow-elevation-1 {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+.shadow-elevation-2 {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+.shadow-elevation-3 {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08), 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+/* Dot grid -- textura sutil no main */
+:root.dark main {
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+:root:not(.dark) main {
+  background-image: radial-gradient(circle, rgba(0, 0, 0, 0.02) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Acessibilidade */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-up,
+  .animate-page-in,
+  .sidebar-indicator {
+    animation: none !important;
+  }
 }
 
 /* Markdown content */

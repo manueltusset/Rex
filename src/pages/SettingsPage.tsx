@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { AnimateIn } from "@/components/ui/AnimateIn";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Toggle } from "@/components/ui/Toggle";
 import { Icon } from "@/components/ui/Icon";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { useConnectionStore } from "@/stores/useConnectionStore";
 import { useSettingsStore } from "@/stores/useSettingsStore";
 import { useAccountStore } from "@/stores/useAccountStore";
@@ -43,17 +45,20 @@ export function SettingsPage() {
 
   return (
     <>
-      <header className="mb-8">
-        <p className="text-sm font-medium text-primary-light/70 mb-1 font-mono tracking-wide uppercase">
-          Configuration
-        </p>
-        <h2 className="text-3xl font-bold text-foreground tracking-tight">
-          Settings
-        </h2>
-      </header>
+      <AnimateIn>
+        <header className="mb-8">
+          <p className="text-xs font-medium text-primary mb-2 font-mono tracking-widest uppercase opacity-80">
+            Configuration
+          </p>
+          <h2 className="text-3xl font-bold text-foreground tracking-tight font-display">
+            Settings
+          </h2>
+        </header>
+      </AnimateIn>
 
       <div className="space-y-6 max-w-2xl">
         {/* Conexao */}
+        <AnimateIn delay={80}>
         <Card>
           <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
             <Icon name="link" className="text-primary-light" />
@@ -61,29 +66,29 @@ export function SettingsPage() {
           </h3>
           <div className="space-y-3 text-sm">
             {account?.displayName && (
-              <div className="flex justify-between py-2 border-b border-border">
+              <div className="flex justify-between py-2 border-b border-border-subtle">
                 <span className="text-muted">Display Name</span>
                 <span className="text-foreground">{account.displayName}</span>
               </div>
             )}
             {account?.emailAddress && (
-              <div className="flex justify-between py-2 border-b border-border">
+              <div className="flex justify-between py-2 border-b border-border-subtle">
                 <span className="text-muted">Email</span>
                 <span className="text-foreground font-mono text-xs">{account.emailAddress}</span>
               </div>
             )}
             {account?.organizationName && (
-              <div className="flex justify-between py-2 border-b border-border">
+              <div className="flex justify-between py-2 border-b border-border-subtle">
                 <span className="text-muted">Organization</span>
                 <span className="text-foreground text-xs">{account.organizationName}</span>
               </div>
             )}
-            <div className="flex justify-between py-2 border-b border-border">
+            <div className="flex justify-between py-2 border-b border-border-subtle">
               <span className="text-muted">Organization ID</span>
               <span className="text-foreground font-mono text-xs">{orgId || "--"}</span>
             </div>
             {account?.organizationRole && (
-              <div className="flex justify-between py-2 border-b border-border">
+              <div className="flex justify-between py-2 border-b border-border-subtle">
                 <span className="text-muted">Role</span>
                 <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-primary/10 text-primary border border-primary/20">
                   {account.organizationRole}
@@ -91,19 +96,19 @@ export function SettingsPage() {
               </div>
             )}
             {account?.billingType && (
-              <div className="flex justify-between py-2 border-b border-border">
+              <div className="flex justify-between py-2 border-b border-border-subtle">
                 <span className="text-muted">Billing</span>
                 <span className="text-foreground text-xs">{formatBillingType(account.billingType)}</span>
               </div>
             )}
             {account?.subscriptionCreatedAt && (
-              <div className="flex justify-between py-2 border-b border-border">
+              <div className="flex justify-between py-2 border-b border-border-subtle">
                 <span className="text-muted">Subscribed Since</span>
                 <span className="text-foreground font-mono text-xs">{formatDate(account.subscriptionCreatedAt)}</span>
               </div>
             )}
             {account?.hasExtraUsageEnabled != null && (
-              <div className="flex justify-between py-2 border-b border-border">
+              <div className="flex justify-between py-2 border-b border-border-subtle">
                 <span className="text-muted">Extra Usage</span>
                 <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium border ${
                   account.hasExtraUsageEnabled
@@ -131,8 +136,10 @@ export function SettingsPage() {
             Disconnect
           </Button>
         </Card>
+        </AnimateIn>
 
         {/* Diretorio */}
+        <AnimateIn delay={160}>
         <Card>
           <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
             <Icon name="folder_open" className="text-primary-light" />
@@ -184,58 +191,40 @@ export function SettingsPage() {
             )}
           </Button>
         </Card>
+        </AnimateIn>
 
         {/* Refresh */}
+        <AnimateIn delay={240}>
         <Card>
           <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
             <Icon name="refresh" className="text-primary-light" />
             Auto Refresh
           </h3>
-          <div className="flex gap-2">
-            {refreshOptions.map((opt) => (
-              <button
-                key={opt.value}
-                onClick={() => setRefreshInterval(opt.value)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${
-                  refreshInterval === opt.value
-                    ? "bg-primary/20 text-primary-light border border-primary/30"
-                    : "bg-surface text-muted border border-transparent hover:border-border"
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
+          <SegmentedControl options={refreshOptions} value={refreshInterval} onChange={setRefreshInterval} />
         </Card>
+        </AnimateIn>
 
         {/* Tema */}
+        <AnimateIn delay={320}>
         <Card>
           <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
             <Icon name="palette" className="text-primary-light" />
             Theme
           </h3>
-          <div className="flex gap-2">
-            {([
+          <SegmentedControl
+            options={[
               { label: "Light", value: "light" as const },
               { label: "Dark", value: "dark" as const },
               { label: "System", value: "system" as const },
-            ]).map((opt) => (
-              <button
-                key={opt.value}
-                onClick={() => setTheme(opt.value)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${
-                  theme === opt.value
-                    ? "bg-primary/20 text-primary-light border border-primary/30"
-                    : "bg-surface text-muted border border-transparent hover:border-border"
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
+            ]}
+            value={theme}
+            onChange={setTheme}
+          />
         </Card>
+        </AnimateIn>
 
         {/* Notificacoes */}
+        <AnimateIn delay={400}>
         <Card>
           <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
             <Icon name="notifications" className="text-primary-light" />
@@ -248,15 +237,17 @@ export function SettingsPage() {
             description="Notify when usage reaches 80%, 90%, or 100%"
           />
         </Card>
+        </AnimateIn>
 
         {/* Info */}
+        <AnimateIn delay={480}>
         <Card>
           <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
             <Icon name="info" className="text-primary-light" />
             About
           </h3>
           <div className="space-y-2 text-sm">
-            <div className="flex justify-between py-2 border-b border-border">
+            <div className="flex justify-between py-2 border-b border-border-subtle">
               <span className="text-muted">Version</span>
               <span className="text-foreground font-mono">{APP_VERSION}</span>
             </div>
@@ -266,6 +257,7 @@ export function SettingsPage() {
             </div>
           </div>
         </Card>
+        </AnimateIn>
       </div>
     </>
   );

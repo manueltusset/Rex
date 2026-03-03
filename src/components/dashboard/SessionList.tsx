@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Icon } from "@/components/ui/Icon";
 import { Spinner } from "@/components/ui/Spinner";
 import { Badge } from "@/components/ui/Badge";
+import { SkeletonSessionRow } from "@/components/ui/Skeleton";
 import { SessionItem } from "./SessionItem";
 import { useSessionStore } from "@/stores/useSessionStore";
 import type { SessionMeta } from "@/types/session";
@@ -126,8 +127,10 @@ export function SessionList() {
       {/* Lista */}
       <div className="divide-y divide-border-subtle flex-1">
         {isLoading && sessions.length === 0 ? (
-          <div className="px-6 py-12 text-center text-muted-subtle">
-            Loading sessions...
+          <div className="divide-y divide-border-subtle">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <SkeletonSessionRow key={i} />
+            ))}
           </div>
         ) : paginated.length === 0 ? (
           <div className="px-6 py-12 text-center text-muted-subtle">
@@ -150,11 +153,11 @@ export function SessionList() {
       </div>
 
       {/* Paginacao */}
-      <div className="px-6 py-4 border-t border-border-subtle flex justify-between items-center bg-bg/20">
+      <div className="px-6 py-3 border-t border-border-subtle flex justify-between items-center bg-bg/20">
         <span className="text-xs text-muted-subtle font-mono">
-          Showing {paginated.length} of {merged.length} sessions
+          {paginated.length} of {merged.length}
         </span>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-1.5">
           <button
             className={`px-3 py-1.5 rounded bg-surface border border-border-subtle text-xs transition-colors ${
               page === 0
@@ -166,6 +169,9 @@ export function SessionList() {
           >
             Previous
           </button>
+          <span className="px-2 text-xs text-muted-subtle font-mono">
+            {page + 1}/{totalPages || 1}
+          </span>
           <button
             className={`px-3 py-1.5 rounded bg-surface border border-border-subtle text-xs transition-colors ${
               page >= totalPages - 1

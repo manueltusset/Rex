@@ -1,75 +1,33 @@
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { SessionList } from "@/components/dashboard/SessionList";
-import { StatsOverview } from "@/components/dashboard/StatsOverview";
+import {
+  useStatsData,
+  StatCard,
+  DailyActivityChart,
+  TokensByModelChart,
+  HourHeatmap,
+  ModelBreakdown,
+} from "@/components/dashboard/StatsOverview";
 import { ActivityRings } from "@/components/ui/ActivityRings";
+import { AnimateIn } from "@/components/ui/AnimateIn";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
 import { Card } from "@/components/ui/Card";
 import { Spinner } from "@/components/ui/Spinner";
+import { SkeletonRings } from "@/components/ui/Skeleton";
 import { useUsageStore } from "@/stores/useUsageStore";
 import { useSessionStore } from "@/stores/useSessionStore";
 import { useMcpStore } from "@/stores/useMcpStore";
-import { formatTimeUntil } from "@/utils/formatters";
+import { UsageLegendRow } from "@/components/ui/UsageLegendRow";
+import { formatNumber, formatCurrency, formatDuration, formatDate } from "@/utils/formatters";
 import { ROUTES, APP_VERSION } from "@/utils/constants";
-import type { UsageWindow } from "@/types/usage";
-
-function legendColor(value: number, base: string): string {
-  if (value >= 90) return "#ef4444";
-  if (value >= 80) return "#f59e0b";
-  return base;
-}
-
-function statusBadge(used: number) {
-  if (used >= 90) return { label: "CRITICAL", cls: "bg-danger/10 text-danger border-danger/20" };
-  if (used >= 80) return { label: "NEAR LIMIT", cls: "bg-rex-accent/10 text-rex-accent border-rex-accent/20" };
-  return { label: "NORMAL", cls: "bg-ring-bg text-muted border-border" };
-}
-
-function UsageLegendRow({
-  color,
-  label,
-  data,
-}: {
-  color: string;
-  label: string;
-  data: UsageWindow | null;
-}) {
-  const used = data ? Math.round(data.utilization) : 0;
-  const dotColor = data ? legendColor(used, color) : color;
-  const badge = statusBadge(used);
-
-  if (!data) {
-    return (
-      <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-surface/50 opacity-50">
-        <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
-        <span className="text-sm text-muted-subtle flex-1">{label}</span>
-        <span className="text-sm text-muted-subtle">--</span>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-surface/50">
-      <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: dotColor }} />
-      <span className="text-sm text-muted flex-1">{label}</span>
-      <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium border ${badge.cls}`}>
-        {badge.label}
-      </span>
-      <span className="text-sm font-bold text-foreground w-12 text-right">
-        {used}%
-      </span>
-      <span className="text-xs text-muted-subtle w-20 text-right">
-        {data.resets_at ? formatTimeUntil(data.resets_at) : "--"}
-      </span>
-    </div>
-  );
-}
 
 export function DashboardPage() {
   const { fiveHour, sevenDay, sonnetWeekly, opusWeekly, extraUsage, isLoading: usageLoading, fetch: fetchUsage } = useUsageStore();
   const { fetch: fetchSessions } = useSessionStore();
   const { servers: mcpServers, fetch: fetchMcp } = useMcpStore();
+  const stats = useStatsData();
 
   useEffect(() => {
     fetchMcp();
@@ -95,119 +53,190 @@ export function DashboardPage() {
   return (
     <>
       {/* Header */}
-      <header className="flex justify-between items-end mb-10">
-        <div>
-          <p className="text-xs font-medium text-primary mb-2 font-mono tracking-widest uppercase opacity-80">
-            System Overview
-          </p>
-          <h2 className="text-3xl font-bold text-foreground tracking-tight font-display">
-            Dashboard
-          </h2>
-        </div>
-        <div className="flex gap-3">
-          <Button variant="secondary" onClick={handleRefresh}>
-            {usageLoading ? (
-              <Spinner size="sm" />
-            ) : (
-              <Icon name="refresh" size="sm" />
-            )}
-            Refresh Data
-          </Button>
-        </div>
-      </header>
-
-      {/* Usage Overview */}
-      <Card className="mb-6">
-        <div className="flex items-center gap-8">
-          <div className="flex items-center justify-center shrink-0">
-            {usageLoading && !fiveHour ? (
-              <div className="w-[180px] h-[180px] flex items-center justify-center">
-                <Spinner />
-              </div>
-            ) : (
-              <ActivityRings
-                rings={rings}
-                size={180}
-                strokeWidth={12}
-                gap={5}
-              />
-            )}
+      <AnimateIn>
+        <header className="flex justify-between items-end mb-6">
+          <div>
+            <p className="text-xs font-medium text-primary mb-2 font-mono tracking-widest uppercase opacity-80">
+              System Overview
+            </p>
+            <h2 className="text-3xl font-bold text-foreground tracking-tight font-display">
+              Dashboard
+            </h2>
           </div>
-          <div className="flex-1 space-y-1.5 min-w-0">
-            <UsageLegendRow color="#10b981" label="Session (5h)" data={fiveHour} />
-            <UsageLegendRow color="#a78bfa" label="Weekly (7d)" data={sevenDay} />
-            <UsageLegendRow color="#60a5fa" label="Sonnet (7d)" data={sonnetWeekly} />
-            {opusWeekly && (
-              <UsageLegendRow color="#fb923c" label="Opus (7d)" data={opusWeekly} />
-            )}
-            {extraUsage?.is_enabled && extraUsage.utilization != null && (
-              <UsageLegendRow
-                color="#f472b6"
-                label="Extra Usage"
-                data={{ utilization: extraUsage.utilization, resets_at: null }}
-              />
-            )}
+          <div className="flex gap-3">
+            <Button variant="secondary" onClick={handleRefresh}>
+              {usageLoading ? (
+                <Spinner size="sm" />
+              ) : (
+                <Icon name="refresh" size="sm" />
+              )}
+              Refresh
+            </Button>
           </div>
-        </div>
-      </Card>
+        </header>
+      </AnimateIn>
 
-      {/* Activity Overview */}
-      <StatsOverview />
-
-      {/* MCP Status (compacto) */}
-      {mcpServers.length > 0 && (
-        <Card className="mb-6">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <Icon name="hub" size="sm" className="text-muted" />
-              <h3 className="text-sm font-bold text-foreground">MCP Servers</h3>
-              <span className="text-xs text-muted-subtle">
-                {mcpServers.filter((s) => s.status === "ok").length}/{mcpServers.length} connected
-              </span>
-            </div>
-            <Link
-              to={ROUTES.MCP}
-              className="text-xs text-primary hover:text-primary-light transition-colors"
-            >
-              View all
-            </Link>
-          </div>
-          <div className="space-y-1">
-            {mcpServers.map((server) => (
-              <div
-                key={`${server.scope}-${server.name}-${server.project_path ?? ""}`}
-                className="flex items-center gap-2.5 px-2 py-1.5 rounded-md hover:bg-surface/50"
-              >
-                <div
-                  className={`w-2 h-2 rounded-full shrink-0 ${
-                    server.status === "ok"
-                      ? "bg-primary"
-                      : server.status === "error"
-                        ? "bg-danger"
-                        : "bg-muted-subtle"
-                  }`}
+      {/* Bento Grid - Row 1: Rings + Stat Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-4">
+        {/* Usage Rings -- 2 colunas, 2 linhas */}
+        <AnimateIn delay={80} className="col-span-1 md:col-span-2 md:row-span-2">
+          <Card variant="hero" className="h-full">
+            <div className="flex flex-col items-center gap-4 h-full justify-center">
+              {usageLoading && !fiveHour ? (
+                <SkeletonRings />
+              ) : (
+                <ActivityRings
+                  rings={rings}
+                  size={160}
+                  strokeWidth={11}
+                  gap={5}
                 />
-                <span className="text-xs text-foreground">{server.name}</span>
-                <span className="text-[10px] text-muted-subtle font-mono">{server.server_type}</span>
-                {server.status === "error" && server.error_message && (
-                  <span className="text-[10px] text-danger truncate ml-auto">{server.error_message}</span>
+              )}
+              <div className="w-full space-y-1">
+                <UsageLegendRow color="#10b981" label="Session (5h)" data={fiveHour} />
+                <UsageLegendRow color="#a78bfa" label="Weekly (7d)" data={sevenDay} />
+                <UsageLegendRow color="#60a5fa" label="Sonnet (7d)" data={sonnetWeekly} />
+                {opusWeekly && (
+                  <UsageLegendRow color="#fb923c" label="Opus (7d)" data={opusWeekly} />
+                )}
+                {extraUsage?.is_enabled && extraUsage.utilization != null && (
+                  <UsageLegendRow
+                    color="#f472b6"
+                    label="Extra Usage"
+                    data={{ utilization: extraUsage.utilization, resets_at: null }}
+                  />
                 )}
               </div>
-            ))}
+            </div>
+          </Card>
+        </AnimateIn>
+
+        {/* Stat cards -- sub-grid 2x2 alinhado com o hero */}
+        {stats.globalStats && (
+          <div className="col-span-1 md:col-span-2 md:row-span-2 grid grid-cols-2 grid-rows-2 gap-4">
+            <AnimateIn delay={120} className="h-full">
+              <StatCard icon="chat" label="Sessions" value={formatNumber(stats.globalStats.totalSessions)} className="h-full" />
+            </AnimateIn>
+            <AnimateIn delay={160} className="h-full">
+              <StatCard icon="forum" label="Messages" value={formatNumber(stats.globalStats.totalMessages)} className="h-full" />
+            </AnimateIn>
+            <AnimateIn delay={200} className="h-full">
+              <StatCard icon="payments" label="Total Cost" value={stats.totalCost > 0 ? formatCurrency(stats.totalCost) : "--"} className="h-full" />
+            </AnimateIn>
+            <AnimateIn delay={240} className="h-full">
+              {stats.peakHour ? (
+                <StatCard icon="schedule" label="Peak Hour" value={stats.peakHour} className="h-full" />
+              ) : stats.longestSession?.duration ? (
+                <StatCard icon="timer" label="Longest" value={formatDuration(stats.longestSession.duration)} className="h-full" />
+              ) : (
+                <StatCard icon="calendar_today" label="Since" value={formatDate(stats.globalStats.firstSessionDate)} className="h-full" />
+              )}
+            </AnimateIn>
           </div>
-        </Card>
+        )}
+      </div>
+
+      {/* Bento Grid - Row 2: Charts */}
+      {(stats.activityData.length > 0 || stats.tokenData.length > 0) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-4">
+          {stats.activityData.length > 0 && (
+            <AnimateIn delay={280} className="col-span-1 md:col-span-2">
+              <Card className="h-full">
+                <DailyActivityChart data={stats.activityData} />
+              </Card>
+            </AnimateIn>
+          )}
+          {stats.tokenData.length > 0 && stats.allModelNames.length > 0 && (
+            <AnimateIn delay={320} className="col-span-1 md:col-span-2">
+              <Card className="h-full">
+                <TokensByModelChart
+                  data={stats.tokenData}
+                  modelNames={stats.allModelNames}
+                  colorMap={stats.colorMap}
+                />
+              </Card>
+            </AnimateIn>
+          )}
+        </div>
       )}
 
-      {/* Lista de sessoes */}
-      <SessionList />
+      {/* Bento Grid - Row 3: Heatmap + MCP */}
+      {(stats.globalStats?.hourCounts || mcpServers.length > 0 || stats.modelBreakdown.length > 0) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-4">
+          {stats.globalStats?.hourCounts && Object.keys(stats.globalStats.hourCounts).length > 0 && (
+            <AnimateIn delay={360} className="col-span-1 md:col-span-2">
+              <Card className="h-full">
+                <HourHeatmap hourCounts={stats.globalStats.hourCounts} />
+              </Card>
+            </AnimateIn>
+          )}
+          {mcpServers.length > 0 ? (
+            <AnimateIn delay={400} className="col-span-1 md:col-span-2">
+              <Card variant="accent" className="h-full">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Icon name="hub" size="sm" className="text-muted" />
+                    <h3 className="text-sm font-bold text-foreground">MCP Servers</h3>
+                    <span className="text-xs text-muted-subtle">
+                      {mcpServers.filter((s) => s.status === "ok").length}/{mcpServers.length}
+                    </span>
+                  </div>
+                  <Link
+                    to={ROUTES.MCP}
+                    className="text-xs text-primary hover:text-primary-light transition-colors"
+                  >
+                    View all
+                  </Link>
+                </div>
+                <div className="space-y-1">
+                  {mcpServers.map((server) => (
+                    <div
+                      key={`${server.scope}-${server.name}-${server.project_path ?? ""}`}
+                      className="flex items-center gap-2.5 px-2 py-1.5 rounded-md hover:bg-surface/50"
+                    >
+                      <div
+                        className={`w-2 h-2 rounded-full shrink-0 ${
+                          server.status === "ok"
+                            ? "bg-primary"
+                            : server.status === "error"
+                              ? "bg-danger"
+                              : "bg-muted-subtle"
+                        }`}
+                      />
+                      <span className="text-xs text-foreground">{server.name}</span>
+                      <span className="text-[10px] text-muted-subtle font-mono">{server.server_type}</span>
+                      {server.status === "error" && server.error_message && (
+                        <span className="text-[10px] text-danger truncate ml-auto">{server.error_message}</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            </AnimateIn>
+          ) : stats.modelBreakdown.length > 0 ? (
+            <AnimateIn delay={400} className="col-span-1 md:col-span-2">
+              <Card className="h-full">
+                <ModelBreakdown models={stats.modelBreakdown} colorMap={stats.colorMap} />
+              </Card>
+            </AnimateIn>
+          ) : null}
+        </div>
+      )}
+
+      {/* Sessions -- full width */}
+      <AnimateIn delay={440}>
+        <SessionList />
+      </AnimateIn>
 
       {/* Footer */}
-      <footer className="mt-8 flex justify-between items-center text-xs text-muted-subtle font-mono pb-4">
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-primary shadow-[0_0_5px_rgba(16,185,129,0.5)]" />
-          <p>Rex v{APP_VERSION} - Connected to Anthropic API</p>
-        </div>
-      </footer>
+      <AnimateIn delay={480}>
+        <footer className="mt-6 flex justify-between items-center text-xs text-muted-subtle font-mono pb-4">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-primary shadow-[0_0_5px_rgba(16,185,129,0.5)]" />
+            <p>Rex v{APP_VERSION} - Connected to Anthropic API</p>
+          </div>
+        </footer>
+      </AnimateIn>
     </>
   );
 }

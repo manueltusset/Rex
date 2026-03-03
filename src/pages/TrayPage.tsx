@@ -7,7 +7,7 @@ import { useSettingsStore } from "@/stores/useSettingsStore";
 import { useTheme } from "@/hooks/useTheme";
 import { ActivityRings } from "@/components/ui/ActivityRings";
 import { Spinner } from "@/components/ui/Spinner";
-import { formatTimeUntil } from "@/utils/formatters";
+import { UsageLegendRow } from "@/components/ui/UsageLegendRow";
 import { getValue } from "@/services/store";
 import type { UsageWindow, ExtraUsage } from "@/types/usage";
 
@@ -20,55 +20,6 @@ interface UsageCache {
   opusWeekly: UsageWindow | null;
   extraUsage: ExtraUsage | null;
   cachedAt: number;
-}
-
-// Cor com threshold: amarelo >=80%, vermelho >=90%
-function legendColor(value: number, base: string): string {
-  if (value >= 90) return "#ef4444";
-  if (value >= 80) return "#f59e0b";
-  return base;
-}
-
-function LegendRow({
-  color,
-  label,
-  data,
-}: {
-  color: string;
-  label: string;
-  data: UsageWindow | null;
-}) {
-  const used = data ? Math.round(data.utilization) : 0;
-  const dotColor = data ? legendColor(used, color) : color;
-
-  if (!data) {
-    return (
-      <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-surface/50 opacity-50">
-        <span
-          className="w-2.5 h-2.5 rounded-full shrink-0"
-          style={{ backgroundColor: color }}
-        />
-        <span className="text-xs text-muted-subtle flex-1">{label}</span>
-        <span className="text-xs text-muted-subtle">--</span>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-surface/50">
-      <span
-        className="w-2.5 h-2.5 rounded-full shrink-0"
-        style={{ backgroundColor: dotColor }}
-      />
-      <span className="text-xs text-muted flex-1">{label}</span>
-      <span className="text-xs font-bold text-foreground w-10 text-right">
-        {used}%
-      </span>
-      <span className="text-[10px] text-muted-subtle w-20 text-right">
-        {data.resets_at ? formatTimeUntil(data.resets_at) : "--"}
-      </span>
-    </div>
-  );
 }
 
 export function TrayPage() {
@@ -201,17 +152,18 @@ export function TrayPage() {
 
       {/* Legenda */}
       <div className="flex-1 space-y-1.5">
-        <LegendRow color="#10b981" label="Session (5h)" data={fiveHour} />
-        <LegendRow color="#a78bfa" label="Weekly (7d)" data={sevenDay} />
-        <LegendRow color="#60a5fa" label="Sonnet (7d)" data={sonnetWeekly} />
+        <UsageLegendRow color="#10b981" label="Session (5h)" data={fiveHour} compact />
+        <UsageLegendRow color="#a78bfa" label="Weekly (7d)" data={sevenDay} compact />
+        <UsageLegendRow color="#60a5fa" label="Sonnet (7d)" data={sonnetWeekly} compact />
         {opusWeekly && (
-          <LegendRow color="#fb923c" label="Opus (7d)" data={opusWeekly} />
+          <UsageLegendRow color="#fb923c" label="Opus (7d)" data={opusWeekly} compact />
         )}
         {extraUsage?.is_enabled && extraUsage.utilization != null && (
-          <LegendRow
+          <UsageLegendRow
             color="#f472b6"
             label="Extra Usage"
             data={{ utilization: extraUsage.utilization, resets_at: null }}
+            compact
           />
         )}
       </div>
