@@ -101,11 +101,17 @@ async fn compute_project_jsonl_stats(
         .map(|p| (path_to_slug(p), p.clone()))
         .collect();
 
-    let Ok(entries) = std::fs::read_dir(&projects_dir) else {
-        return result;
-    };
+    // Listar diretorios sem bloquear o executor Tokio
+    let pd = projects_dir.clone();
+    let dir_entries = tokio::task::spawn_blocking(move || {
+        std::fs::read_dir(&pd)
+            .map(|rd| rd.flatten().collect::<Vec<_>>())
+            .unwrap_or_default()
+    })
+    .await
+    .unwrap_or_default();
 
-    for entry in entries.flatten() {
+    for entry in dir_entries {
         let dir_path = entry.path();
         if !dir_path.is_dir() {
             continue;
@@ -122,7 +128,11 @@ async fn compute_project_jsonl_stats(
             .cloned()
             .unwrap_or_else(|| slug_to_path(&dir_name));
 
-        let jsonl_files = collect_jsonl_files(&dir_path);
+        // Coletar JSONL sem bloquear o executor
+        let dp = dir_path.clone();
+        let jsonl_files = tokio::task::spawn_blocking(move || collect_jsonl_files(&dp))
+            .await
+            .unwrap_or_default();
         if jsonl_files.is_empty() {
             continue;
         }
@@ -280,8 +290,11 @@ async fn supplement_global_stats(stats: &mut GlobalStats, home: &std::path::Path
     let mut extra_messages: u64 = 0;
     let mut extra_sessions: HashSet<String> = HashSet::new();
 
-    // Listar todos os JSONL recursivamente
-    let jsonl_files = collect_jsonl_files(&projects_dir);
+    // Listar todos os JSONL recursivamente sem bloquear o executor
+    let pd = projects_dir.clone();
+    let jsonl_files = tokio::task::spawn_blocking(move || collect_jsonl_files(&pd))
+        .await
+        .unwrap_or_default();
 
     for file_path in &jsonl_files {
         let Ok(content) = tokio::fs::read_to_string(file_path).await else {

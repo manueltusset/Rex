@@ -41,7 +41,7 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
       await fetchUsage(token);
       set({ orgId, token, isConnected: true, isLoading: false });
       await setValue("orgId", orgId);
-      await setValue("token", token);
+      // Token nao e persistido em disco por seguranca
     } catch (e) {
       set({
         isLoading: false,
@@ -57,7 +57,7 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
     const { wslDistro } = get();
     const distro = wslDistro || undefined;
 
-    // 1. Detectar token
+    // 1. Detectar token do SO (Keychain/Keyring/arquivo)
     let token: string;
     try {
       token = await detectOAuthToken(distro);
@@ -70,7 +70,6 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
     try {
       await fetchUsage(token);
       set({ token, isConnected: true, isLoading: false });
-      await setValue("token", token);
       return "success";
     } catch {
       // Token expirado - tentar refresh automatico
@@ -81,7 +80,6 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
       const newToken = await refreshOAuthToken(distro);
       await fetchUsage(newToken);
       set({ token: newToken, isConnected: true, isLoading: false });
-      await setValue("token", newToken);
       return "success";
     } catch {
       set({ isLoading: false });
@@ -106,7 +104,6 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
       const newToken = await refreshOAuthToken(distro);
       await fetchUsage(newToken);
       set({ token: newToken, isConnected: true, error: null });
-      await setValue("token", newToken);
       return true;
     } catch {
       // OAuth refresh falhou, tentar re-deteccao
@@ -118,7 +115,6 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
       if (newToken && newToken !== get().token) {
         await fetchUsage(newToken);
         set({ token: newToken, isConnected: true, error: null });
-        await setValue("token", newToken);
         return true;
       }
     } catch {
@@ -146,12 +142,19 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
   loadFromStore: async () => {
     try {
       const orgId = (await getValue<string>("orgId")) ?? "";
-      const token = (await getValue<string>("token")) ?? "";
       const claudeDir = (await getValue<string>("claudeDir")) ?? "";
       const useWsl = (await getValue<boolean>("useWsl")) ?? false;
       const wslDistro = (await getValue<string>("wslDistro")) ?? "";
-      const isConnected = !!token;
-      set({ orgId, token, claudeDir, useWsl, wslDistro, isConnected, isHydrated: true });
+      set({ orgId, claudeDir, useWsl, wslDistro });
+
+      // Detectar token localmente sem chamar a API (evita 429)
+      const distro = wslDistro || undefined;
+      try {
+        const token = await detectOAuthToken(distro);
+        set({ token, isConnected: true, isHydrated: true });
+      } catch {
+        set({ isHydrated: true });
+      }
     } catch {
       set({ isHydrated: true });
     }
