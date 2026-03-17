@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import { useUsageStore } from "@/stores/useUsageStore";
 import { useSessionStore } from "@/stores/useSessionStore";
 import { useMcpStore } from "@/stores/useMcpStore";
@@ -13,22 +13,39 @@ export function useAutoRefresh() {
   const fetchAccount = useAccountStore((s) => s.fetch);
   const fetchStats = useStatsStore((s) => s.fetch);
   const refreshInterval = useSettingsStore((s) => s.refreshInterval);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  useEffect(() => {
+  const fetchAll = useCallback(() => {
     fetchUsage();
     fetchSessions();
     fetchMcp();
     fetchAccount();
     fetchStats();
+  }, [fetchUsage, fetchSessions, fetchMcp, fetchAccount, fetchStats]);
 
-    const interval = setInterval(() => {
-      fetchUsage();
-      fetchSessions();
-      fetchMcp();
-      fetchAccount();
-      fetchStats();
-    }, refreshInterval);
+  useEffect(() => {
+    fetchAll();
 
-    return () => clearInterval(interval);
-  }, [refreshInterval, fetchUsage, fetchSessions, fetchMcp, fetchAccount, fetchStats]);
+    intervalRef.current = setInterval(fetchAll, refreshInterval);
+
+    // Pausa polling quando a janela esta oculta, retoma ao restaurar
+    const handleVisibility = () => {
+      if (document.hidden) {
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
+      } else {
+        fetchAll();
+        intervalRef.current = setInterval(fetchAll, refreshInterval);
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, [refreshInterval, fetchAll]);
 }

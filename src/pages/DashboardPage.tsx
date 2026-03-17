@@ -34,7 +34,7 @@ export function DashboardPage() {
   }, [fetchMcp]);
 
   const handleRefresh = () => {
-    fetchUsage();
+    fetchUsage(true);
     fetchSessions();
     fetchMcp();
   };

@@ -18,13 +18,21 @@ interface UsageState {
   lastFetched: number | null;
   error: string | null;
 
-  fetch: () => Promise<void>;
+  fetch: (force?: boolean) => Promise<void>;
 }
 
 function isAuthError(error: unknown): boolean {
   const msg = error instanceof Error ? error.message : String(error);
   return msg.includes("401") || msg.includes("token_expired") || msg.includes("authentication_error");
 }
+
+function isRateLimited(error: unknown): boolean {
+  const msg = error instanceof Error ? error.message : String(error);
+  return msg.includes("429");
+}
+
+// Backoff para 429: pula N ciclos de polling antes de tentar novamente
+let rateLimitSkipUntil = 0;
 
 export const useUsageStore = create<UsageState>((set) => ({
   fiveHour: null,
@@ -36,15 +44,40 @@ export const useUsageStore = create<UsageState>((set) => ({
   lastFetched: null,
   error: null,
 
-  fetch: async () => {
+  fetch: async (force?: boolean) => {
     const { token, isConnected } = useConnectionStore.getState();
     if (!isConnected || !token) return;
+
+    // Backoff: pular se em cooldown (exceto quando forcado pelo usuario)
+    if (!force && Date.now() < rateLimitSkipUntil) return;
 
     set({ isLoading: true, error: null });
     try {
       const data = await fetchUsage(token);
       handleSuccess(set, data);
     } catch (e) {
+      // Rate limit: tentar refresh do token (pode estar expirado)
+      if (isRateLimited(e)) {
+        const refreshed = await useConnectionStore.getState().refreshToken();
+        if (refreshed) {
+          try {
+            const newToken = useConnectionStore.getState().token;
+            const data = await fetchUsage(newToken);
+            rateLimitSkipUntil = 0;
+            handleSuccess(set, data);
+            return;
+          } catch {
+            // Refresh nao resolveu
+          }
+        }
+        rateLimitSkipUntil = Date.now() + 3 * 60 * 1000;
+        set({
+          isLoading: false,
+          error: "Rate limited. Retrying in 3 minutes...",
+        });
+        return;
+      }
+
       if (isAuthError(e)) {
         const refreshed = await useConnectionStore.getState().refreshToken();
         if (refreshed) {

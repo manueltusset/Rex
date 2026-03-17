@@ -128,16 +128,7 @@ async fn check_remote_server(config: &McpServerConfig) -> (String, Option<String
         return ("error".to_string(), Some("No URL configured".to_string()));
     };
 
-    let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(10))
-        .build();
-
-    let client = match client {
-        Ok(c) => c,
-        Err(e) => return ("error".to_string(), Some(format!("HTTP client error: {}", e))),
-    };
-
-    match client.head(url).send().await {
+    match crate::services::anthropic_client::HTTP_CLIENT.head(url).send().await {
         Ok(resp) => {
             let status_code = resp.status().as_u16();
             // Aceitar qualquer resposta (inclusive 401/405) como sinal de que o servidor esta ativo
@@ -199,14 +190,10 @@ async fn check_stdio_server(config: &McpServerConfig) -> (String, Option<String>
     }
 }
 
-/// Verifica status de todos os servidores
+/// Verifica status de todos os servidores em paralelo
 pub async fn check_all_servers() -> Result<Vec<McpServerStatus>, String> {
     let configs = read_mcp_configs().await?;
-
-    let mut statuses = Vec::with_capacity(configs.len());
-    for config in &configs {
-        statuses.push(check_server_health(config).await);
-    }
-
+    let futures: Vec<_> = configs.iter().map(|c| check_server_health(c)).collect();
+    let statuses = futures::future::join_all(futures).await;
     Ok(statuses)
 }

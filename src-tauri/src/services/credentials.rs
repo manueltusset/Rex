@@ -340,6 +340,7 @@ async fn read_macos_keychain_raw() -> Option<String> {
 }
 
 /// Tenta decodificar uma string hexadecimal para UTF-8
+#[cfg(target_os = "macos")]
 fn try_hex_decode(hex: &str) -> Option<String> {
     let bytes: Vec<u8> = (0..hex.len())
         .step_by(2)

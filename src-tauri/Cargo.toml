@@ -22,7 +22,8 @@ tauri-plugin-positioner = { version = "2", features = ["tray-icon"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 reqwest = { version = "0.12", features = ["json", "rustls-tls"] }
-tokio = { version = "1", features = ["fs", "io-util", "process"] }
+tokio = { version = "1", features = ["fs", "io-util", "process", "rt", "sync"] }
+futures = "0.3"
 dirs = "6"
 chrono = { version = "0.4", features = ["serde"] }
 thiserror = "2"
