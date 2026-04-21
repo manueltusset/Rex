@@ -20,8 +20,7 @@ export function AppLayout() {
       <TitleBar />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />
-        <main className="flex-1 p-6 overflow-y-auto relative">
-          <div className="pointer-events-none fixed top-0 right-0 w-[500px] h-[350px] bg-[radial-gradient(ellipse_at_top_right,rgba(16,185,129,0.04),transparent_70%)]" />
+        <main className="flex-1 p-6 overflow-y-auto bg-bg">
           <div key={location.pathname} className="animate-page-in relative">
             <Outlet />
           </div>

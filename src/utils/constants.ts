@@ -5,6 +5,7 @@ export const ROUTES = {
   PROJECTS: "/projects",
   USAGE: "/usage",
   MCP: "/mcp",
+  SKILLS: "/skills",
   SETTINGS: "/settings",
   TRAY: "/tray",
 } as const;

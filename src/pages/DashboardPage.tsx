@@ -56,10 +56,10 @@ export function DashboardPage() {
       <AnimateIn>
         <header className="flex justify-between items-end mb-6">
           <div>
-            <p className="text-xs font-medium text-primary mb-2 font-mono tracking-widest uppercase opacity-80">
+            <p className="text-xs text-muted mb-1 uppercase" style={{ letterSpacing: "0.08em" }}>
               System Overview
             </p>
-            <h2 className="text-3xl font-bold text-foreground tracking-tight font-display">
+            <h2 className="text-[28px] font-semibold text-foreground font-display" style={{ letterSpacing: "-0.5px", lineHeight: "1.14" }}>
               Dashboard
             </h2>
           </div>

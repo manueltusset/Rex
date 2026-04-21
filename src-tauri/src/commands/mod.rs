@@ -3,6 +3,7 @@ pub mod auth;
 pub mod mcp;
 pub mod platform;
 pub mod sessions;
+pub mod skills;
 pub mod stats;
 pub mod terminal;
 pub mod tray;

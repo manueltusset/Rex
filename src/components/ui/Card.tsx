@@ -8,20 +8,20 @@ interface CardProps {
 }
 
 const variantClasses = {
-  default: "glass-card p-5 rounded-xl hover:shadow-elevation-2",
-  hero: "glass-card p-6 rounded-xl border-l-2 border-l-primary shadow-elevation-1 hover:shadow-elevation-3",
-  accent: "glass-card p-5 rounded-xl bg-gradient-to-br from-primary/[0.04] to-transparent hover:shadow-elevation-2",
+  default: "glass-card p-5 rounded-xl",
+  hero: "glass-card p-6 rounded-xl border-l-2 border-l-primary",
+  accent: "glass-card p-5 rounded-xl",
 };
 
 export function Card({
   children,
   className = "",
   variant = "default",
-  hoverColor = "hover:border-primary/20",
+  hoverColor = "",
 }: CardProps) {
   return (
     <div
-      className={`relative overflow-hidden transition-all duration-300 group ${variantClasses[variant]} ${hoverColor} ${className}`}
+      className={`relative overflow-hidden transition-all duration-200 group ${variantClasses[variant]} ${hoverColor} ${className}`}
     >
       {children}
     </div>
