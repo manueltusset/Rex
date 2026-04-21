@@ -8,6 +8,7 @@ import { ProjectsPage } from "@/pages/ProjectsPage";
 import { UsagePage } from "@/pages/UsagePage";
 import { SettingsPage } from "@/pages/SettingsPage";
 import { McpStatusPage } from "@/pages/McpStatusPage";
+import { SkillsPage } from "@/pages/SkillsPage";
 import { TrayPage } from "@/pages/TrayPage";
 import { Spinner } from "@/components/ui/Spinner";
 import { useConnectionStore } from "@/stores/useConnectionStore";
@@ -45,6 +46,7 @@ export default function App() {
         <Route path={ROUTES.PROJECTS} element={<ProjectsPage />} />
         <Route path={ROUTES.USAGE} element={<UsagePage />} />
         <Route path={ROUTES.MCP} element={<McpStatusPage />} />
+        <Route path={ROUTES.SKILLS} element={<SkillsPage />} />
         <Route path={ROUTES.SETTINGS} element={<SettingsPage />} />
       </Route>
       <Route path="*" element={<Navigate to={ROUTES.DASHBOARD} replace />} />
